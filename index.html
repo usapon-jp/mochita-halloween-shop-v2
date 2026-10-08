@@ -112,23 +112,25 @@
   <div id="panel" hidden>
     <section role="dialog" aria-modal="true" aria-labelledby="panel-title">
       <header><h2 id="panel-title">せってい</h2><button id="panel-close" aria-label="とじる"><svg class="ic" aria-hidden="true"><use href="#ic-close"/></svg></button></header>
-      <h3>あそびかた</h3>
+      <details class="howto">
+      <summary>あそびかた</summary>
       <ul class="how">
         <li><b>タップ</b><span>もちたが歩いてくるよ。止まると、こっちを向くよ</span></li>
         <li><b>ドラッグ</b><span>カメラを回す</span></li>
         <li><b>ピンチ</b><span>拡大・縮小（PCはホイール）</span></li>
         <li><b>2本指</b><span>カメラを平行にうごかす（PCは右ドラッグ）</span></li>
         <li><b>もちたボタン</b><span>押すと、左下にスティックが出る。動かした向きに、もちたが歩く。画面のほかの場所をドラッグするとカメラを回す（もういちど押すともどる）</span></li>
-        <li><b>ジャンプ・ダッシュ</b><span>もちたモードで、右下のボタン。ダッシュは押している間、はやく走る（PC: Space / Shift）</span></li>
-        <li><b>プレゼントボックス</b><span>お店や お庭に かくれているよ。ちかづくと あいて、お菓子が出てくる。もちたモードでタグを開き、お菓子を好きな場所に置くと、そこへワープできる（なまえもつけられる）</span></li>
+        <li><b>ジャンプ<br>ダッシュ</b><span>もちたモードで、右下のボタン。ダッシュは押している間、はやく走る（PC: Space / Shift）</span></li>
+        <li><b>プレゼント<br>ボックス</b><span>お店や お庭に かくれているよ。ちかづくと あいて、お菓子が出てくる。もちたモードでタグを開き、お菓子を好きな場所に置くと、そこへワープできる（なまえもつけられる）</span></li>
         <li><b>カメラ</b><span>いまの画面を写真にする</span></li>
         <li><b>枠のボタン</b><span>画面だけを見る。右上をタップでもどる</span></li>
         <li><b>下のボタン</b><span>カメラの切りかえ ・ おまかせで自動めぐり</span></li>
         <li class="pc"><b>PCのキー</b><span>1〜4 カメラ ・ H 画面だけ ・ T おまかせ ・ P 写真 ・ 矢印/WASD もちたを動かす</span></li>
       </ul>
+      </details>
       <h3>あるくはやさ</h3>
       <div class="seg" id="speed" role="group" aria-label="あるくはやさ">
-        <button data-rate="4">ゆっくり</button><button data-rate="7" class="on">ふつう</button><button data-rate="10">はやい</button>
+        <button data-rate="0.95">ゆっくり</button><button data-rate="1.35" class="on">ふつう</button><button data-rate="1.9">はやい</button>
       </div>
       <h3>お菓子さがし</h3>
       <div class="seg"><button id="sweets-reset">はじめからやりなおす</button></div>

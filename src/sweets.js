@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { COUNTER, CUSHION, ISLAND, surfaceY, blockedAt, inRect } from './play.js';
 
-const LS = 'mochita-sweets-v1';
+const LS = 'mochita-v2-sweets-v1'; // 前の版(mochita-halloween-shop)と同じサイトの中で、保存が混ざらないよう別名
 const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: .65, ...o });
 const mesh = (g, m, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); o.castShadow = true; return o; };
 

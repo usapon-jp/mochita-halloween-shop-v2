@@ -413,9 +413,9 @@ panel.addEventListener('click', e => { if (e.target === panel) openPanel(false);
 addEventListener('keydown', e => { if (e.key === 'Escape') openPanel(false); });
 // 歩くはやさ（再生速度。前進速度は walkSpeed() で連動）
 const speedBtns = [...document.querySelectorAll('#speed [data-rate]')];
-function setSpeed(r, save = true) { speedBtns.forEach(b => b.classList.toggle('on', +b.dataset.rate === r)); MOCHITA.playRate = r; if (walker) walker.setRate(r); if (save) try { localStorage.setItem('mochita-rate', String(r)); } catch {} }
+function setSpeed(r, save = true) { speedBtns.forEach(b => b.classList.toggle('on', +b.dataset.rate === r)); MOCHITA.playRate = r; if (walker) walker.setRate(r); if (save) try { localStorage.setItem('mochita-v2-rate', String(r)); } catch {} }
 speedBtns.forEach(b => b.addEventListener('click', () => setSpeed(+b.dataset.rate)));
-try { const r = +localStorage.getItem('mochita-rate'); if ([4, 7, 10].includes(r)) setSpeed(r, false); } catch {}
+try { const r = +localStorage.getItem('mochita-v2-rate'); if ([0.95, 1.35, 1.9].includes(r)) setSpeed(r, false); } catch {}
 document.getElementById('eye').addEventListener('click', () => toggleUI());
 if (q.has('hideui')) document.body.classList.add('ui-hidden');
 if (q.has('ghost')) ghost.visible = true;
