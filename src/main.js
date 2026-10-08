@@ -362,8 +362,8 @@ const modeBtn = document.getElementById('mode');
 function setDriving(on) {
   if (on && !walker) { toast('もちたの準備中…'); return; }
   driving = on; document.body.classList.toggle('driving', on); modeBtn.setAttribute('aria-pressed', on); updateAreaLabel();
-  if (!walker) return; walker.setManual(on); dirs.clear(); sv.id = null; sv.x = sv.z = 0; if (typeof knob !== 'undefined') { knob.style.transform = ''; stick.classList.remove('active', 'act'); stick.style.left = stick.style.top = stick.style.bottom = ''; } pushInput();
-  if (on) { auto(false, false); rig.beginFree(); rig.followFn = () => walker.head(); rig.free.goal = { r: 3.6, pitch: .4, yaw: rig.free.yaw }; /* 今のカメラの向きのまま近づく（壁の外に出ない） */ toast('画面の左側を触って動かすと、もちたが歩くよ'); }
+  if (!walker) return; walker.setManual(on); dirs.clear(); sv.id = null; sv.x = sv.z = 0; if (typeof knob !== 'undefined') { knob.style.transform = ''; stick.classList.remove('active', 'act'); } pushInput();
+  if (on) { auto(false, false); rig.beginFree(); rig.followFn = () => walker.head(); rig.free.goal = { r: 3.6, pitch: .4, yaw: rig.free.yaw }; /* 今のカメラの向きのまま近づく（壁の外に出ない） */ toast('左下のスティックを動かすと、もちたが歩くよ'); }
   else { hunt?.cancel(); rig.followFn = null; walker.setDash(false); btnDash.classList.remove('down'); document.querySelectorAll('#areas [data-shot]').forEach(b => b.classList.remove('on')); updateAreaLabel(); toast('もとにもどったよ'); }
 }
 const zone = document.getElementById('stickzone'), stick = document.getElementById('stick'), knob = stick.querySelector('.knob'), sv = { x: 0, z: 0, id: null };
@@ -379,14 +379,13 @@ function stickMove(e) {
   let dx = e.clientX - sCenter.x, dy = e.clientY - sCenter.y; const l = Math.hypot(dx, dy) || 1, k = Math.min(1, l / STICK_R), ux = dx / l, uy = dy / l;
   knob.style.transform = `translate(${ux * k * STICK_R}px,${uy * k * STICK_R}px)`; sv.x = ux * k; sv.z = -uy * k; stick.classList.toggle('act', l >= 8); pushInput(); // 8px以上動かしている間だけ、うすいあたたか色に
 }
-zone.addEventListener('pointerdown', e => {
+zone.addEventListener('pointerdown', e => { // スティックは元の場所から動かさない。つまみだけが、その中心からの向きと強さで動く
   e.preventDefault(); if (sv.id !== null) return; sv.id = e.pointerId; try { zone.setPointerCapture(e.pointerId); } catch {}
-  const zr = zone.getBoundingClientRect(), half = 66, x = Math.min(Math.max(e.clientX, zr.left + half + 8), zr.right - half - 8), y = Math.min(Math.max(e.clientY, zr.top + half + 8), zr.bottom - half - 8);
-  stick.style.left = (x - zr.left - half) + 'px'; stick.style.bottom = 'auto'; stick.style.top = (y - zr.top - half) + 'px'; sCenter = { x, y };
+  const r = stick.getBoundingClientRect(); sCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   stick.classList.add('active'); knob.classList.add('drag'); stickMove(e);
 });
 zone.addEventListener('pointermove', e => { if (e.pointerId === sv.id) stickMove(e); });
-const stickEnd = e => { if (e.pointerId !== sv.id) return; sv.id = null; sv.x = sv.z = 0; stick.classList.remove('active', 'act'); knob.classList.remove('drag'); knob.style.transform = ''; stick.style.left = stick.style.top = stick.style.bottom = ''; pushInput(); };
+const stickEnd = e => { if (e.pointerId !== sv.id) return; sv.id = null; sv.x = sv.z = 0; stick.classList.remove('active', 'act'); knob.classList.remove('drag'); knob.style.transform = ''; pushInput(); };
 zone.addEventListener('pointerup', stickEnd); zone.addEventListener('pointercancel', stickEnd); zone.addEventListener('lostpointercapture', stickEnd); zone.addEventListener('contextmenu', e => e.preventDefault());
 const KEYDIR = { ArrowUp: 'up', w: 'up', W: 'up', ArrowDown: 'down', s: 'down', S: 'down', ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right' };
 addEventListener('keydown', e => { const d = KEYDIR[e.key]; if (d && driving) { e.preventDefault(); dirs.add(d); pushInput(); } });

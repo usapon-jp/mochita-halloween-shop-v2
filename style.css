@@ -238,3 +238,11 @@ body.placing #cluster{opacity:.5}
   #panel section{max-height:calc(100dvh - 24px)}
 }
 #ui{z-index:3}   /* せってい・カードの下にスティックが透けないように */
+
+/* ---- スティックは元の場所に固定（右下のボタン群と同じ高さ）。触る範囲もスティックのまわりだけ ---- */
+#stickzone{top:auto;bottom:0;left:0;width:calc(210px + env(safe-area-inset-left,0px));height:240px}
+#stick{left:calc(36px + env(safe-area-inset-left,0px));bottom:max(24px,calc(env(safe-area-inset-bottom,0px) + 18px))}
+@media (orientation:landscape) and (max-height:540px){
+  #stickzone{width:calc(170px + env(safe-area-inset-left,0px));height:170px}
+  #stick{left:calc(32px + env(safe-area-inset-left,0px));bottom:max(24px,calc(env(safe-area-inset-bottom,0px) + 16px))}
+}
