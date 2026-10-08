@@ -28,7 +28,21 @@ export function pink(rows = 7, seed = 1) {
   const v = Array.from({ length: rows }, rnd); let count = 0;
   return () => { count++; let k = 0, c = count; while ((c & 1) === 0 && k < rows - 1) { c >>= 1; k++; } v[k] = rnd(); return v.reduce((a, b) => a + b, 0) / rows * 2.2; };
 }
+// もうひとつのメロディ(C): 同じコード進行の上で、下がったり上がったりする別の旋律
+const MEL_C = [
+  [['C6', 1], ['B5', .5], ['A5', .5], ['E5', 1]], [['A5', 1.5], ['C6', .5], ['E6', 1]], [['D6', 1], ['C6', .5], ['A5', .5], ['F5', 1]], [['E5', .5], ['G#5', .5], ['B5', 1], ['D6', 1]],
+  [['C6', 1.5], ['B5', .5], ['A5', 1]], [['A5', 1], ['G5', .5], ['F5', .5], ['A5', 1]], [['G#5', 1], ['B5', 1], ['E6', 1]], [['A5', 2], ['E5', 1]],
+  [['G5', 1], ['E5', .5], ['G5', .5], ['C6', 1]], [['D6', 1.5], ['B5', .5], ['G5', 1]], [['C6', 1], ['A5', 1], ['F5', 1]], [['E5', 1], ['G#5', 1], ['B5', 1]],
+  [['A5', 1], ['B5', .5], ['C6', .5], ['E6', 1]], [['D6', 1.5], ['A5', .5], ['F5', 1]], [['B5', 1], ['G#5', 1], ['E5', 1]], [['A5', 3]],
+];
+// 8周(約3分40秒)で ひとめぐり: [メロディ, 変化, 音の高さ(半音), テンポ]
+const PLAN = [
+  ['A', 'base', 0, 1], ['A', 'sparkle', 0, 1], ['A', 'low', 0, .98], ['A', 'orn', 0, 1],
+  ['C', 'base', 0, 1.02], ['C', 'orn', 0, 1.03], ['A', 'orn', 2, 1.02], ['C', 'sparse', 0, .95],
+];
+export const PLAN_LOOPS = PLAN.length;
 export const BAR_SEC = 3 * BEAT, LOOP_BARS = BARS.length;
+export const TOTAL_SEC = () => PLAN.reduce((a, p) => a + LOOP_BARS * BAR_SEC / p[3], 0);
 
 export class MusicBox {
   constructor() { this.fj = pink(7, 11); this.fv = pink(7, 23); this.ft = pink(5, 37); this.ctx = null; this.enabled = true; this.running = false; this.bar = 0; this._lastPat = -1; this.next = 0; this.timer = null; this.vol = .9; }
@@ -64,15 +78,17 @@ export class MusicBox {
   // 伴奏のかたち（毎小節「ズン・チャッ・チャッ」にならないよう、5種類を入れかえる）
   //  0=ふつうのワルツ 1=アルペジオ(のぼる) 2=のばす(ふわっと) 3=2拍目を休む(ゆれる) 4=細かいくずし
   _pattern(i) {
-    const loop = Math.floor(i / LOOP_BARS), bar = i % LOOP_BARS;
-    if (bar === 0) return 0;                       // 頭はいつもワルツで、拍をそろえる
-    if (bar === 7 || bar === 15) return 2;         // 区切りはふわっと終わる
-    const seq = [0, 1, 0, 3, 4, 0, 1, 3, 0, 4, 1, 0, 3, 1, 0], k = (bar * 7 + loop * 4 + (loop >> 1) * 3) % seq.length;
+    const loop = Math.floor(i / LOOP_BARS) % PLAN_LOOPS, bar = i % LOOP_BARS, mode = PLAN[loop][1];
+    if (bar === 0) return mode === 'sparse' ? 2 : 0;           // 頭はワルツで、拍をそろえる（しずかな周はふわっと）
+    if (bar === 7 || bar === 15) return 2;                       // 区切りはふわっと終わる
+    if (mode === 'sparse') return bar % 2 ? 3 : 2;               // しずかな周: のばす／2拍目を休む
+    const seq = [0, 1, 0, 3, 4, 0, 1, 3, 0, 4, 1, 0, 3, 1, 0], k = (bar * 7 + [0, 7, 3, 11, 5, 13, 9, 2][loop]) % seq.length;   // 周ごとに並びがずれる
     let p = seq[k]; if (i > 0 && p === this._lastPat && p !== 2) p = (p + 1 + loop) % 5; return p;
   }
   scheduleBar(ctx, i, t) { // i番目の小節を、時刻tから鳴らす
-    const [bass, chord, mel] = BARS[i % LOOP_BARS], loop = Math.floor(i / LOOP_BARS) % 4, pat = this._pattern(i); this._lastPat = pat;
-    const lower = loop === 2 ? .5 : 1, st = (n, m = 1) => hz(n) * m;
+    const b16 = i % LOOP_BARS, loopI = Math.floor(i / LOOP_BARS) % PLAN_LOOPS, [melKind, mode, trans] = PLAN[loopI], pat = this._pattern(i); this._lastPat = pat;
+    const [bass, chord, melA] = BARS[b16], mel = melKind === 'C' ? MEL_C[b16] : melA, tr = Math.pow(2, trans / 12);
+    const lower = mode === 'low' ? .5 : 1, st = (n, m = 1) => hz(n) * m * tr;
     // 低音
     if (pat === 2) this._bass(ctx, t, st(bass), BEAT * 2.8, .32);
     else if (pat === 1 || pat === 4) this._bass(ctx, t, st(bass), BEAT * 1.2, .3);
@@ -88,11 +104,11 @@ export class MusicBox {
     // メロディ（周ごとに少しずつ変える）: 0=そのまま 1=高いきらめき 2=1オクターブ下でやさしく 3=かざり音と、ながい音に3度のハーモニー
     let at = 0;
     for (const [n, beats] of mel) {
-      const f = st(n, lower), len = Math.max(.9, beats * BEAT * 1.4), g = loop === 2 ? .15 : .17;
-      if (loop === 3 && beats >= 1) this._bell(ctx, t + at * BEAT - BEAT * .14, f * Math.pow(2, -2 / 12), BEAT * .3, .06);   // かざり音(1つ下から)
-      this._bell(ctx, t + at * BEAT, f, len, g);
-      if (loop === 1 && beats >= 1.5) this._bell(ctx, t + at * BEAT + BEAT * .5, f * 2, .7, .045);
-      if (loop === 3 && beats >= 2) this._bell(ctx, t + at * BEAT + .02, f * Math.pow(2, -3 / 12), len * .9, .06);       // 3度ほど下の音で ふくらませる
+      const f = st(n, lower), len = Math.max(.9, beats * BEAT * (mode === 'sparse' ? 2 : 1.4)), g = mode === 'low' ? .15 : mode === 'sparse' ? .13 : .17;
+      if (mode === 'orn' && beats >= 1) this._bell(ctx, t + at * BEAT - BEAT * .14, f * Math.pow(2, -2 / 12), BEAT * .3, .06);   // かざり音(1つ下から)
+      if (mode !== 'sparse' || at === 0 || beats >= 2) this._bell(ctx, t + at * BEAT, f, len, g);
+      if (mode === 'sparkle' && beats >= 1.5) this._bell(ctx, t + at * BEAT + BEAT * .5, f * 2, .7, .045);
+      if (mode === 'orn' && beats >= 2) this._bell(ctx, t + at * BEAT + .02, f * Math.pow(2, -3 / 12), len * .9, .06);       // 3度ほど下の音で ふくらませる
       at += beats;
     }
   }
@@ -110,7 +126,7 @@ export class MusicBox {
     this.timer = setInterval(() => { // 先回りして、すこし先の小節まで予約する
       if (this.bedGain) this.bedGain.gain.setTargetAtTime(.013 + .010 * (this.fv() * .5 + .5), this.ctx.currentTime, 1.5);
       if (this.next < this.ctx.currentTime) this.next = this.ctx.currentTime + .05;   // 遅れたぶんは まとめて鳴らさず、いまから続ける
-      while (this.next < this.ctx.currentTime + .8) { this.scheduleBar(this.ctx, this.bar++, this.next); this.next += BAR_SEC * (1 + this.ft() * .008); }
+      while (this.next < this.ctx.currentTime + .8) { this.scheduleBar(this.ctx, this.bar++, this.next); this.next += BAR_SEC / PLAN[Math.floor((this.bar - 1) / LOOP_BARS) % PLAN_LOOPS][3] * (1 + this.ft() * .008); }
     }, 120);
   }
   setEnabled(on) {
@@ -121,8 +137,8 @@ export class MusicBox {
   hidden(h) { if (!this.ctx) return; if (h) this.ctx.suspend?.(); else if (this.enabled) this.ctx.resume?.(); }
 }
 // 動作確認用: 画面に出さず、そのままファイル用の音を計算する（ピークの確認など）
-export async function renderOffline(seconds = 30) {
+export async function renderOffline(seconds = 30, startBar = 0) {
   const sr = 22050, ctx = new OfflineAudioContext(1, sr * seconds, sr), mb = new MusicBox(); mb._graph(ctx, ctx.destination, .9);
-  for (let i = 0; i * BAR_SEC < seconds; i++) mb.scheduleBar(ctx, i, i * BAR_SEC);
+  let t = 0; for (let i = startBar; t < seconds; i++) { mb.scheduleBar(ctx, i, t); t += BAR_SEC / PLAN[Math.floor(i / LOOP_BARS) % PLAN_LOOPS][3]; }
   return ctx.startRendering();
 }
