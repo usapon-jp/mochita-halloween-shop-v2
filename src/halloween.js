@@ -32,7 +32,7 @@ export function halloweenInterior(world, cp, front, props) {
   Q.pumpkinPile(fl, -3.3, 0, 1.0, 1.0, true); Q.pumpkinPile(fl, 3.4, 0, -.9, .9, true);
   Q.hayBale(fl, 3.4, 0, -2.2, .9, .3); Q.cauldron(fl, -3.45, 0, -1.2, 1.4);
   Q.ghost(fl, -3.1, 1.2, 1.9, 1.5, { bob: .1, noBlob: true });
-  Q.pumpkin(fl, 1.2, 0, 2.7, .9, { face: true, ry: -.4 }); Q.pumpkin(fl, 1.7, 0, 2.9, .55, { color: C.lav2 });
+  Q.pumpkin(fl, 1.95, 0, 2.75, .9, { face: true, ry: -.4 }); Q.pumpkin(fl, 2.55, 0, 2.95, .55, { color: C.lav2 }); // 本の山(1.2, 2.8)と重ならないよう右へ（かぼちゃが本にかかって溶けて見えていた）
   Q.acorns(fl, 2.4, 0, 2.6, 1.6, 4); Q.leafPile(fl, -1.2, 0, 2.7, 1.0);
   Q.mum(fl, -.4, 0, 2.9, 1.1, C.butter); Q.mum(fl, 2.9, 0, 2.9, 1.0, C.rose, C.mint2);
   [[-.5, 2.2], [.8, 2.0], [-1.9, 1.5]].forEach(([x, z], i) => Q.mapleLeafOnGround(fl, x, z, [0xe8892e, 0xc8502a, 0xf0c050][i % 3], 1.4));
