@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>もちたの小さな雑貨とおやつのお店</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<!-- 手描き風アイコン（自作SVG。絵文字・文字の流用はしない）。色は style.css の変数で季節ごとに変わる -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-camera" viewBox="0 0 48 48">
+      <path class="k fp" d="M7.6 17.8c0-2.7 1.6-4.1 4.3-4.1h5l2.6-3.9h8.7l2.6 3.9h5c2.7 0 4.3 1.4 4.3 4.1v15.6c0 2.8-1.7 4.3-4.3 4.3H11.9c-2.7 0-4.3-1.5-4.3-4.3z"/>
+      <circle class="k fa" cx="24.2" cy="26" r="7.6"/>
+    </symbol>
+    <symbol id="ic-gear" viewBox="0 0 48 48">
+      <path class="k fp" d="M21.1 11.3L21.4 5.8L26.6 5.6L26.9 11.3A13.2 13.2 0 0 1 31.0 12.8L30.9 13.0L35.2 9.2L39.0 12.7L35.3 16.9A13.2 13.2 0 0 1 36.9 21.0L37.0 21.0L42.3 21.4L42.4 26.6L36.8 26.9A13.2 13.2 0 0 1 35.2 31.0L35.1 30.9L38.7 35.1L35.1 38.7L31.1 35.4A13.2 13.2 0 0 1 27.0 36.9L27.0 37.0L26.6 42.6L21.4 42.6L21.1 36.7A13.2 13.2 0 0 1 17.0 35.2L17.1 35.1L12.8 38.9L9.1 35.3L12.7 31.1A13.2 13.2 0 0 1 11.1 27.0L11.0 27.0L5.8 26.6L5.5 21.4L11.1 21.0A13.2 13.2 0 0 1 12.8 17.0L12.8 17.0L9.3 12.9L12.8 9.2L17.1 13.0A13.2 13.2 0 0 1 21.0 11.1z"/>
+      <circle class="k" cx="24" cy="24" r="5.2"/>
+    </symbol>
+    <symbol id="ic-mochi" viewBox="0 0 48 48">
+      <path class="k fp" d="M10.4 21.2L8.8 9.4l10 5.8M37.6 21.2l1.6-11.8-10 5.8"/>
+      <path class="k fp" d="M6.6 28.8c0-9.5 7.5-15.6 17.4-15.6s17.4 6.1 17.4 15.6c0 7.3-6.9 11.7-17.4 11.7S6.6 36.1 6.6 28.8z"/>
+      <path class="k fa" d="M24 14.4c-.2 2.5-.1 4.6.4 6.6" stroke-width="3"/>
+      <circle cx="17.2" cy="27.4" r="2.1" fill="var(--ink)"/><circle cx="30.8" cy="27.4" r="2.1" fill="var(--ink)"/>
+      <path class="k" d="M22.9 30.4l1.1 1.4 1.1-1.4M24 31.8v1.8" stroke-width="1.9"/>
+      <ellipse cx="12.4" cy="31.6" rx="2.8" ry="1.9" fill="var(--accent)" opacity=".75"/><ellipse cx="35.6" cy="31.6" rx="2.8" ry="1.9" fill="var(--accent)" opacity=".75"/>
+      <ellipse class="k fa" cx="17.6" cy="41.8" rx="3.3" ry="2" stroke-width="2.2"/><ellipse class="k fa" cx="30.4" cy="41.8" rx="3.3" ry="2" stroke-width="2.2"/>
+    </symbol>
+    <symbol id="ic-arrow" viewBox="0 0 48 48">
+      <path class="k fa" d="M24 8.6c1 0 1.8.5 2.4 1.4l10.4 15.4c1.1 1.7-.1 3.9-2.2 3.9h-5.4v7.6c0 1.6-1.3 2.9-2.9 2.9h-4.6c-1.6 0-2.9-1.3-2.9-2.9v-7.6h-5.4c-2.1 0-3.3-2.2-2.2-3.9L21.6 10c.6-.9 1.4-1.4 2.4-1.4z"/>
+    </symbol>
+    <symbol id="ic-jump" viewBox="0 0 48 48">
+      <ellipse class="k fb" cx="24" cy="40" rx="10" ry="3.2"/>
+      <path class="k fa" d="M24 7.6c.9 0 1.6.4 2.1 1.1l8.3 11.3c.9 1.3 0 3.1-1.6 3.1h-4.3v6.2c0 1.3-1.1 2.4-2.4 2.4h-4.2c-1.3 0-2.4-1.1-2.4-2.4v-6.2h-4.3c-1.6 0-2.5-1.8-1.6-3.1l8.3-11.3c.5-.7 1.2-1.1 2.1-1.1z"/>
+    </symbol>
+    <symbol id="ic-dash" viewBox="0 0 48 48">
+      <path class="k fa" d="M13 12.4c-.8-1.1.4-2.5 1.6-1.9l16.6 9.6c1.4.8 1.4 2.8 0 3.6l-16.6 9.6c-1.2.6-2.4-.8-1.6-1.9l7.4-9.5c.4-.5.4-1.2 0-1.7z" transform="translate(5 1)"/>
+      <path class="k" d="M5.5 17h6M3.5 24h7M5.5 31h6"/>
+    </symbol>
+    <symbol id="ic-close" viewBox="0 0 48 48">
+      <path class="k" d="M12.5 12.8c7.6 7.4 15.2 15 22.8 22.6M35.4 12.4C27.8 20 20.2 27.8 12.6 35.6"/>
+    </symbol>
+    <symbol id="ic-frame" viewBox="0 0 48 48">
+      <path class="k" d="M7.5 17V9.6c0-1.2.9-2.1 2.1-2.1H17M31 7.5h7.4c1.2 0 2.1.9 2.1 2.1V17M40.5 31v7.4c0 1.2-.9 2.1-2.1 2.1H31M17 40.5H9.6c-1.2 0-2.1-.9-2.1-2.1V31"/>
+      <circle class="k fa" cx="24" cy="24" r="5.2"/>
+    </symbol>
+    <symbol id="ic-cup" viewBox="0 0 48 48">
+      <path class="k fp" d="M9.6 19.6h24.4v9.2c0 6.5-4.8 10.5-12.2 10.5S9.6 35.3 9.6 28.8z"/>
+      <path class="k" d="M34 22.6h3c3 0 4.6 1.8 4.6 4.1 0 2.6-2 4.4-5 4.4h-2.6"/>
+      <path class="k" d="M17 13.6c-1.5-2 1.5-3.4 0-5.6M25 13.6c-1.5-2 1.5-3.4 0-5.6"/>
+    </symbol>
+    <symbol id="ic-house" viewBox="0 0 48 48">
+      <path class="k fp" d="M10 22.4v17.2h28V22.4"/>
+      <path class="k fa" d="M5 25.2L24 8.4l19 16.8z"/>
+    </symbol>
+    <symbol id="ic-window" viewBox="0 0 48 48">
+      <path class="k fb" d="M12.4 40.8V19.2c0-6.2 5-10.8 11.7-10.8 6.6 0 11.5 4.6 11.5 10.8v21.6z"/>
+      <path class="k" d="M24 8.6v32.2"/>
+    </symbol>
+    <symbol id="ic-jar" viewBox="0 0 48 48">
+      <path class="k fp" d="M19.4 8.4h9.4v7.4l5.4 7.8c1.6 2.3 2.4 4.7 2.4 7.4 0 5.6-4.8 9.7-12.5 9.7s-12.5-4.1-12.5-9.7c0-2.7.8-5.1 2.4-7.4l5.4-7.8z"/>
+      <path class="k fa" d="M11.8 30.4c4.2 2.4 8.4-2.2 12.5 0s8.4 1.4 11.9-.4"/>
+    </symbol>
+    <symbol id="ic-star" viewBox="0 0 48 48">
+      <path class="k fa" d="M23.9 7l4.8 10.4 11.2 1.3-8.3 7.6 2.3 11L23.9 31l-10 5.6 2.4-11-8.2-7.7 11.1-1.2z"/>
+    </symbol>
+    <symbol id="ic-pumpkin" viewBox="0 0 48 48">
+      <path class="k fa" d="M24 14.4c-3-2.7-9.6-2.9-13.2 1.3-3.8 4.7-3.8 14.2 1.8 19.4 3.4 3.1 8.8 3.5 11.4 1.7 2.6 1.8 8 1.4 11.4-1.7 5.6-5.2 5.6-14.7 1.8-19.4-3.6-4.2-10.2-4-13.2-1.3z"/>
+      <path class="k" d="M24 14.2c.1-2.8.8-4.8 2.6-6.2"/>
+    </symbol>
+    <symbol id="ic-tap" viewBox="0 0 48 48">
+      <circle class="k fa" cx="24" cy="24" r="5"/>
+      <path class="k" d="M13.6 16c-4 4.6-4 11.4 0 16M34.4 16c4 4.6 4 11.4 0 16"/>
+    </symbol>
+  </defs>
+</svg>
+
+<canvas id="c" aria-label="もちたの小さな雑貨とおやつのお店の3D箱庭"></canvas>
+<div id="stickzone" aria-hidden="true">
+  <div id="stick"><div class="base"><i class="chev u"></i><i class="chev d"></i><i class="chev l"></i><i class="chev r"></i></div><div class="knob"></div></div>
+</div>
+<div id="ui">
+  <button id="area" aria-haspopup="true" aria-expanded="false" aria-controls="areas" title="エリアをえらぶ">
+    <svg class="ic" aria-hidden="true"><use href="#ic-pumpkin"/></svg>
+    <span class="txt"><b>もちたの小さな雑貨とおやつのお店</b><small><span id="area-cur">カウンター</span><i class="chev"></i></small></span>
+  </button>
+  <div id="areas" role="menu" hidden>
+    <p id="areas-note">ワープ: えらんだ場所へ、もちたがとんでいくよ</p>
+    <button data-warp="shop" class="warp" role="menuitem"><svg class="ic" aria-hidden="true"><use href="#ic-cup"/></svg><span>お店のなか</span></button>
+    <button data-warp="front" class="warp" role="menuitem"><svg class="ic" aria-hidden="true"><use href="#ic-house"/></svg><span>お店のまえ</span></button>
+    <button data-warp="garden" class="warp" role="menuitem"><svg class="ic" aria-hidden="true"><use href="#ic-pumpkin"/></svg><span>お庭</span></button>
+    <div id="sweets"></div>
+    <button data-shot="counter" class="on" role="menuitem"><svg class="ic" aria-hidden="true"><use href="#ic-cup"/></svg><span>カウンター</span></button>
+    <button data-shot="overview" role="menuitem"><svg class="ic" aria-hidden="true"><use href="#ic-house"/></svg><span>全景</span></button>
+    <button data-shot="window" role="menuitem"><svg class="ic" aria-hidden="true"><use href="#ic-window"/></svg><span>窓辺</span></button>
+    <button data-shot="closeup" role="menuitem"><svg class="ic" aria-hidden="true"><use href="#ic-jar"/></svg><span>小物</span></button>
+    <button id="auto" aria-pressed="false" role="menuitem"><svg class="ic" aria-hidden="true"><use href="#ic-star"/></svg><span>おまかせ</span></button>
+  </div>
+  <div id="sys">
+    <button id="eye" aria-label="画面だけを見る（UIを隠す）" title="画面だけを見る (H)"><svg class="ic" aria-hidden="true"><use href="#ic-frame"/></svg></button>
+    <button id="settings" aria-label="せってい（あそびかた・クレジット）" title="せってい"><svg class="ic" aria-hidden="true"><use href="#ic-gear"/></svg></button>
+  </div>
+  <p id="tip"><svg class="ic" aria-hidden="true"><use href="#ic-tap"/></svg><b>画面をタップした場所まで、<br>もちたが来るよ</b></p>
+  <div id="cluster">
+    <button id="photo" aria-label="写真をとる" title="写真をとる (P)"><svg class="ic" aria-hidden="true"><use href="#ic-camera"/></svg></button>
+    <button id="btn-dash" aria-label="ダッシュ（押している間）" title="ダッシュ (Shift)"><svg class="ic" aria-hidden="true"><use href="#ic-dash"/></svg></button>
+    <button id="btn-jump" aria-label="ジャンプ" title="ジャンプ (Space)"><svg class="ic" aria-hidden="true"><use href="#ic-jump"/></svg></button>
+    <button id="mode" aria-label="もちたをうごかす" aria-pressed="false" title="もちたをうごかす"><svg class="ic" aria-hidden="true"><use href="#ic-mochi"/></svg></button>
+  </div>
+  <div id="placebar" hidden><p id="pb-msg"></p><input id="pb-name" maxlength="12" hidden aria-label="ワープ地点のなまえ" autocomplete="off"><div class="pb-btns"><button id="pb-yes" class="yes">はい</button><button id="pb-no">いいえ</button></div></div>
+  <div id="panel" hidden>
+    <section role="dialog" aria-modal="true" aria-labelledby="panel-title">
+      <header><h2 id="panel-title">せってい</h2><button id="panel-close" aria-label="とじる"><svg class="ic" aria-hidden="true"><use href="#ic-close"/></svg></button></header>
+      <h3>あそびかた</h3>
+      <ul class="how">
+        <li><b>タップ</b><span>もちたが歩いてくるよ。止まると、こっちを向くよ</span></li>
+        <li><b>ドラッグ</b><span>カメラを回す</span></li>
+        <li><b>ピンチ</b><span>拡大・縮小（PCはホイール）</span></li>
+        <li><b>2本指</b><span>カメラを平行にうごかす（PCは右ドラッグ）</span></li>
+        <li><b>もちたボタン</b><span>押すと、画面の左側を触った所にスティックが出る。動かした向きに、もちたが歩く。右側のドラッグでカメラを回す（もういちど押すともどる）</span></li>
+        <li><b>ジャンプ・ダッシュ</b><span>もちたモードで、右下のボタン。ダッシュは押している間、はやく走る（PC: Space / Shift）</span></li>
+        <li><b>プレゼントボックス</b><span>お店や お庭に かくれているよ。ちかづくと あいて、お菓子が出てくる。もちたモードでタグを開き、お菓子を好きな場所に置くと、そこへワープできる（なまえもつけられる）</span></li>
+        <li><b>カメラ</b><span>いまの画面を写真にする</span></li>
+        <li><b>枠のボタン</b><span>画面だけを見る。右上をタップでもどる</span></li>
+        <li><b>下のボタン</b><span>カメラの切りかえ ・ おまかせで自動めぐり</span></li>
+        <li class="pc"><b>PCのキー</b><span>1〜4 カメラ ・ H 画面だけ ・ T おまかせ ・ P 写真 ・ 矢印/WASD もちたを動かす</span></li>
+      </ul>
+      <h3>あるくはやさ</h3>
+      <div class="seg" id="speed" role="group" aria-label="あるくはやさ">
+        <button data-rate="4">ゆっくり</button><button data-rate="7" class="on">ふつう</button><button data-rate="10">はやい</button>
+      </div>
+      <h3>お菓子さがし</h3>
+      <div class="seg"><button id="sweets-reset">はじめからやりなおす</button></div>
+      <details class="credit">
+        <summary>クレジット</summary>
+        <p>キャラクター：もちた<br>3D原型：<a href="https://www.meshy.ai/" target="_blank" rel="noopener">Meshy</a>で画像から生成（<a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener">CC BY 4.0</a>）。造形・着色・しっぽ・骨組み・動き・軽量化を改変。<br>Three.js (MIT)</p>
+      </details>
+    </section>
+  </div>
+</div>
+<button id="reveal" aria-label="UIを表示"></button>
+<div id="flash"></div><div id="toast"></div>
+<div id="fallback" hidden>3Dを表示できませんでした。WebGL対応のブラウザで開いてください。</div>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
