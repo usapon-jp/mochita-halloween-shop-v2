@@ -363,7 +363,7 @@ function setDriving(on) {
   if (on && !walker) { toast('もちたの準備中…'); return; }
   driving = on; document.body.classList.toggle('driving', on); modeBtn.setAttribute('aria-pressed', on); updateAreaLabel();
   if (!walker) return; walker.setManual(on); dirs.clear(); sv.id = null; sv.x = sv.z = 0; if (typeof knob !== 'undefined') { knob.style.transform = ''; stick.classList.remove('active', 'act'); } pushInput();
-  if (on) { auto(false, false); rig.beginFree(); rig.followFn = () => walker.head(); rig.free.goal = { r: 3.6, pitch: .4, yaw: rig.free.yaw }; /* 今のカメラの向きのまま近づく（壁の外に出ない） */ toast('左下のスティックを動かすと、もちたが歩くよ'); }
+  if (on) { auto(false, false); rig.beginFree(); rig.followFn = () => walker.head(); rig.free.goal = { r: 3.6, pitch: .4, yaw: rig.free.yaw }; /* 今のカメラの向きのまま近づく（壁の外に出ない） */ toast('画面の左側をなぞると、もちたが歩くよ'); }
   else { hunt?.cancel(); rig.followFn = null; walker.setDash(false); btnDash.classList.remove('down'); document.querySelectorAll('#areas [data-shot]').forEach(b => b.classList.remove('on')); updateAreaLabel(); toast('もとにもどったよ'); }
 }
 const zone = document.getElementById('stickzone'), stick = document.getElementById('stick'), knob = stick.querySelector('.knob'), sv = { x: 0, z: 0, id: null };
@@ -379,9 +379,9 @@ function stickMove(e) {
   let dx = e.clientX - sCenter.x, dy = e.clientY - sCenter.y; const l = Math.hypot(dx, dy) || 1, k = Math.min(1, l / STICK_R), ux = dx / l, uy = dy / l;
   knob.style.transform = `translate(${ux * k * STICK_R}px,${uy * k * STICK_R}px)`; sv.x = ux * k; sv.z = -uy * k; stick.classList.toggle('act', l >= 8); pushInput(); // 8px以上動かしている間だけ、うすいあたたか色に
 }
-zone.addEventListener('pointerdown', e => { // スティックは元の場所から動かさない。つまみだけが、その中心からの向きと強さで動く
+zone.addEventListener('pointerdown', e => { // スティックの絵は元の場所に固定。判定は広く、指を置いた所からの向きと強さで歩く
   e.preventDefault(); if (sv.id !== null) return; sv.id = e.pointerId; try { zone.setPointerCapture(e.pointerId); } catch {}
-  const r = stick.getBoundingClientRect(); sCenter = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  sCenter = { x: e.clientX, y: e.clientY }; // 指を置いた所が基準（判定は画面の左側ぜんたい）。スティックの絵は動かさず、つまみだけが動く
   stick.classList.add('active'); knob.classList.add('drag'); stickMove(e);
 });
 zone.addEventListener('pointermove', e => { if (e.pointerId === sv.id) stickMove(e); });
