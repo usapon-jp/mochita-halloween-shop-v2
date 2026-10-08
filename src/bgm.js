@@ -1,9 +1,16 @@
-// BGM: ブラウザの中で演奏する、オルゴール風のやさしいハロウィン・ワルツ（3拍子）。
-// 音声ファイルを使わず、その場で音を合成するので、ファイルの重さも著作権の心配もない（この曲はこのプロジェクトのオリジナル）。
-const BPM = 104, BEAT = 60 / BPM;
+// BGM（やさしい版）: ブラウザの中で演奏する、オルゴール風の ゆったりしたハロウィン・ワルツ（3拍子）。
+// ねらい: 目立たず、長く聞いても疲れない。急な切りかえをせず、伴奏の音数・休符・フレーズの終わりを、ゆっくり少しずつ変える。
+// 音声ファイルは使わず、その場で音を合成する（この曲はこのプロジェクトのオリジナル）。
+const BPM = 100, BEAT = 60 / BPM;
 const NOTE = { C: 0, 'C#': 1, D: 2, 'D#': 3, E: 4, F: 5, 'F#': 6, G: 7, 'G#': 8, A: 9, 'A#': 10, B: 11 };
 const hz = n => { const m = /^([A-G]#?)(\d)$/.exec(n); return 440 * Math.pow(2, (NOTE[m[1]] + 12 * (+m[2] + 1) - 69) / 12); };
-// 1小節ごとの [コード低音, [和音の音...], [メロディ: [音, 拍数]...]]（16小節で1周）
+// 1/fゆらぎ: ゆっくりした揺れと細かい揺れが混ざる、自然なゆらぎ（意識されないほど小さく使う）
+export function pink(rows = 7, seed = 1) {
+  let s = seed >>> 0 || 1; const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296) * 2 - 1;
+  const v = Array.from({ length: rows }, rnd); let count = 0;
+  return () => { count++; let k = 0, c = count; while ((c & 1) === 0 && k < rows - 1) { c >>= 1; k++; } v[k] = rnd(); return v.reduce((a, b) => a + b, 0) / rows * 2.2; };
+}
+// 1小節ごとの [低音, [和音の音...], [メロディ: [音, 拍数]... ('R'=休み)]]。16小節で1周。音域は D5〜D6 の中だけ（大きく跳ばない）
 const BARS = [
   ['A2', ['C4', 'E4'], [['E5', 1], ['A5', 1], ['C6', 1]]],
   ['A2', ['C4', 'E4'], [['B5', 1.5], ['A5', .5], ['E5', 1]]],
@@ -20,171 +27,111 @@ const BARS = [
   ['A2', ['C4', 'E4'], [['C6', 1], ['B5', .5], ['A5', .5], ['G5', 1]]],
   ['D3', ['F4', 'A4'], [['F5', 1], ['A5', 1], ['D6', 1]]],
   ['E2', ['G#3', 'D4'], [['C6', 1], ['B5', 1], ['G#5', 1]]],
-  ['A2', ['C4', 'E4'], [['A5', 2]]],
+  ['A2', ['C4', 'E4'], [['A5', 2], ['R', 1]]],
 ];
-// 1/fゆらぎ: -1〜1 のゆるやかな乱数。ふつうの乱数(ざらざら)ではなく、ゆっくりした揺れと細かい揺れが混ざる（自然な心地よさ）
-export function pink(rows = 7, seed = 1) {
-  let s = seed >>> 0 || 1; const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296) * 2 - 1;
-  const v = Array.from({ length: rows }, rnd); let count = 0;
-  return () => { count++; let k = 0, c = count; while ((c & 1) === 0 && k < rows - 1) { c >>= 1; k++; } v[k] = rnd(); return v.reduce((a, b) => a + b, 0) / rows * 2.2; };
-}
-// もうひとつのメロディ(C): 同じコード進行の上で、下がったり上がったりする別の旋律
-const MEL_C = [
-  [['C6', 1], ['B5', .5], ['A5', .5], ['E5', 1]], [['A5', 1.5], ['C6', .5], ['E6', 1]], [['D6', 1], ['C6', .5], ['A5', .5], ['F5', 1]], [['E5', .5], ['G#5', .5], ['B5', 1], ['D6', 1]],
-  [['C6', 1.5], ['B5', .5], ['A5', 1]], [['A5', 1], ['G5', .5], ['F5', .5], ['A5', 1]], [['G#5', 1], ['B5', 1], ['E6', 1]], [['A5', 2], ['E5', 1]],
-  [['G5', 1], ['E5', .5], ['G5', .5], ['C6', 1]], [['D6', 1.5], ['B5', .5], ['G5', 1]], [['C6', 1], ['A5', 1], ['F5', 1]], [['E5', 1], ['G#5', 1], ['B5', 1]],
-  [['A5', 1], ['B5', .5], ['C6', .5], ['E6', 1]], [['D6', 1.5], ['A5', .5], ['F5', 1]], [['B5', 1], ['G#5', 1], ['E5', 1]], [['A5', 3]],
-];
-// メロディB: のびやか（長い音・休みで息つぎ。4小節ごとに ひと休み）
+const clone = a => JSON.parse(JSON.stringify(a));
+const MEL_A = BARS.map(b => b[2]);
+// A2: Aとほとんど同じ。ところどころの音を のばして、フレーズの終わりだけ少し変える（気づくと少し違う、くらい）
+const MEL_A2 = clone(MEL_A); MEL_A2[1] = [['B5', 2], ['E5', 1]]; MEL_A2[5] = [['A5', 2], ['F5', 1]]; MEL_A2[9] = [['B5', 2], ['G5', 1]]; MEL_A2[14] = [['B5', 2], ['G#5', 1]];
+// B: のびやか（長い音と休みで息つぎ）。音域はAと同じ
 const MEL_B = [
   [['E5', 3]], [['A5', 2], ['C6', 1]], [['D6', 1.5], ['C6', .5], ['A5', 1]], [['G#5', 2], ['R', 1]],
   [['E5', 1], ['A5', .5], ['B5', .5], ['C6', 1]], [['A5', 2], ['F5', 1]], [['G#5', 1], ['B5', 2]], [['A5', 2], ['R', 1]],
   [['G5', 1.5], ['E5', .5], ['G5', 1]], [['B5', 3]], [['A5', 1], ['C6', .5], ['A5', .5], ['F5', 1]], [['G#5', 2], ['R', 1]],
-  [['A5', .5], ['B5', .5], ['C6', .5], ['D6', .5], ['E6', 1]], [['D6', 2], ['A5', 1]], [['B5', 1.5], ['G#5', .5], ['E5', 1]], [['A5', 3]],
+  [['A5', 1], ['B5', .5], ['C6', .5], ['D6', 1]], [['D6', 2], ['A5', 1]], [['B5', 1.5], ['G#5', .5], ['E5', 1]], [['A5', 3]],
 ];
-// メロディD: はずむ（休符多め・8分音符・ところどころ駆け上がり）
-const MEL_D = [
-  [['A5', .5], ['R', .5], ['C6', .5], ['R', .5], ['E6', 1]], [['D6', .5], ['C6', .5], ['B5', 1], ['R', 1]], [['F5', .5], ['A5', .5], ['D6', 1], ['C6', 1]], [['B5', 1], ['G#5', 1], ['R', 1]],
-  [['E6', .5], ['R', .5], ['C6', .5], ['A5', .5], ['E5', 1]], [['F5', .5], ['A5', .5], ['C6', 1], ['A5', 1]], [['G#5', .5], ['B5', .5], ['E6', 2]], [['A5', 1], ['R', 2]],
-  [['C6', .5], ['E6', .5], ['G6', 1], ['E6', 1]], [['D6', 1], ['B5', .5], ['G5', .5], ['R', 1]], [['A5', 1], ['C6', 1], ['F6', 1]], [['E6', .5], ['D6', .5], ['B5', 1], ['R', 1]],
-  [['C6', .5], ['A5', .5], ['E5', 1], ['A5', 1]], [['F5', 1], ['A5', .5], ['D6', .5], ['R', 1]], [['G#5', .5], ['B5', .5], ['D6', 1], ['R', 1]], [['A5', 2], ['R', 1]],
-];
-const MELS = { A: BARS.map(b => b[2]), B: MEL_B, C: MEL_C, D: MEL_D };
-// 8周で ひとめぐり: [メロディ, 変化, 音の高さ(半音), テンポ, 楽器]。同じメロディが戻るときは楽器を変える（音色でも別の曲に聞こえる）
-const PLAN = [
-  ['A', 'base', 0, 1, 'box'], ['B', 'base', 0, 1, 'kalimba'], ['C', 'low', 0, .98, 'flute'], ['D', 'orn', 0, 1, 'piano'],
-  ['A', 'base', 0, 1.02, 'flute'], ['B', 'orn', 0, 1.02, 'piano'], ['C', 'base', 2, 1.02, 'box'], ['D', 'sparse', 0, .95, 'kalimba'],
-];
-// 曲の流れ: 4周ごとに、メロディのない しずかな4小節（頭のメロディをリセット）
-const SEGS = [0, 1, 2, 3, 'q', 4, 5, 6, 7, 'q'];
-export const PLAN_LOOPS = PLAN.length;
-export const BAR_SEC = 3 * BEAT, LOOP_BARS = BARS.length;
-export const QUIET_BARS = 4, QUIET_SLOW = 1.15;
-export const TOTAL_SEC = () => SEGS.reduce((t, g) => t + (g === 'q' ? QUIET_BARS * BAR_SEC * QUIET_SLOW : LOOP_BARS * BAR_SEC / PLAN[g][3]), 0);
-export const SEG_COUNT = () => SEGS.length;
+const MELS = { A: MEL_A, A2: MEL_A2, B: MEL_B };
+// 8周で ひとめぐり（約3分50秒）。メロディは A→A→A2→B→A→A2→B→A2 とゆっくり入れかわるだけ（楽器・音域・テンポは変えない）
+const ORDER = ['A', 'A', 'A2', 'B', 'A', 'A2', 'B', 'A2'];
+export const LOOP_BARS = BARS.length, LOOPS = ORDER.length, BAR_SEC = 3 * BEAT;
+export const TOTAL_SEC = () => LOOPS * LOOP_BARS * BAR_SEC;
+// 音数のゆるやかな波: 1.0(ふつう)〜0.45(とても少ない)を、128小節かけて なめらかに行き来する（急に変わらない）。先頭(i=0)と最後は 1.0 に近く、つなぎ目が自然
+const density = i => 0.725 + 0.275 * Math.cos(2 * Math.PI * i / (LOOP_BARS * LOOPS) * 2);
+// 小節ごとの決まった乱数(0〜1): 同じ小節は いつも同じ結果
+const hash = (i, k) => { let x = (i * 374761393 + k * 668265263) >>> 0; x = ((x ^ (x >>> 13)) * 1274126177) >>> 0; return ((x ^ (x >>> 16)) >>> 0) / 4294967296; };
 
 export class MusicBox {
-  constructor() { this.fj = pink(7, 11); this.fv = pink(7, 23); this.ft = pink(5, 37); this.ctx = null; this.enabled = true; this.running = false; this.bar = 0; this.seg = 0; this.segBar = 0; this._lastPat = -1; this.next = 0; this.timer = null; this.vol = .9; }
+  constructor() { this.fj = pink(7, 11); this.fv = pink(7, 23); this.ft = pink(5, 37); this.ctx = null; this.enabled = true; this.running = false; this.bar = 0; this.next = 0; this.timer = null; this.vol = .8; }
   _init() {
     if (this.ctx) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; this.ctx = new AC();
     this._graph(this.ctx, this.ctx.destination, this.vol);
   }
-  // 音の通り道: 全体の音量 → ゆるい圧縮 → 出口。やわらかい残響は短い遅延のくりかえしで作る
+  // 音の通り道: 高い音をやわらげる(ローパス) → 全体の音量 → ゆるい圧縮 → 出口。残響はやわらかく少なめ
   _graph(ctx, out, vol) {
     const master = ctx.createGain(); master.gain.value = vol; this.master = master;
-    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3; comp.attack.value = .01; comp.release.value = .25;
+    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 2.5; comp.attack.value = .02; comp.release.value = .3;
     master.connect(comp); comp.connect(out);
-    const bus = ctx.createGain(); bus.gain.value = 1; bus.connect(master); this.bus = bus;
-    const wet = ctx.createGain(); wet.gain.value = .17; wet.connect(master);
-    for (const [dt, fb] of [[.23, .26], [.31, .22], [.43, .18]]) {
-      const d = ctx.createDelay(1); d.delayTime.value = dt; const g = ctx.createGain(); g.gain.value = fb; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2100;
+    const soft = ctx.createBiquadFilter(); soft.type = 'lowpass'; soft.frequency.value = 2600; soft.Q.value = .5; soft.connect(master);
+    const bus = ctx.createGain(); bus.gain.value = 1; bus.connect(soft); this.bus = bus;
+    const wet = ctx.createGain(); wet.gain.value = .15; wet.connect(master);
+    for (const [dt, fb] of [[.27, .24], [.37, .2], [.49, .16]]) {
+      const d = ctx.createDelay(1); d.delayTime.value = dt; const g = ctx.createGain(); g.gain.value = fb; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800;
       bus.connect(d); d.connect(lp); lp.connect(g); g.connect(d); lp.connect(wet);
     }
   }
-  _bell(ctx, t0, f, len, gain) { // オルゴールの音: 基本の音＋2倍音(すぐ消える)。タイミング(±4ms)と強さ(±7%)を1/fでゆらして、機械っぽさを消す
-    const out = this.bus, t = Math.max(ctx.currentTime || 0, t0 + this.fj() * .004); gain *= 1 + this.fv() * .07;
-    for (const [mul, g, dec] of [[1, 1, len], [2, .28, len * .45], [3.01, .08, len * .2]]) {
+  // やわらかい鈴: 立ち上がりを20msにして「ポン」という打音を目立たせない。倍音は2倍音だけ少し
+  _bell(ctx, t0, f, len, gain) {
+    const t = Math.max(ctx.currentTime || 0, t0 + this.fj() * .0015); gain *= 1 + this.fv() * .03;
+    for (const [mul, g, dec] of [[1, 1, len], [2, .12, len * .4]]) {
       const o = ctx.createOscillator(), e = ctx.createGain(); o.type = 'sine'; o.frequency.value = f * mul;
-      e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(gain * g, t + .006); e.gain.exponentialRampToValueAtTime(.0001, t + dec);
-      o.connect(e); e.connect(out); o.start(t); o.stop(t + dec + .05);
+      e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(gain * g, t + .02); e.gain.exponentialRampToValueAtTime(.0001, t + dec);
+      o.connect(e); e.connect(this.bus); o.start(t); o.stop(t + dec + .05);
     }
   }
-  _mvoice(ctx, kind, t0, f, len, gain) { // メロディの楽器
-    if (kind === 'box') return this._bell(ctx, t0, f, len, gain);
-    const out = this.bus, t = Math.max(ctx.currentTime || 0, t0 + this.fj() * .004); gain *= 1 + this.fv() * .07;
-    const tone = (type, fr, g, att, dec, hold = 0) => { const o = ctx.createOscillator(), e = ctx.createGain(); o.type = type; o.frequency.value = fr; e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(g, t + att);
-      if (hold) { e.gain.setValueAtTime(g, t + hold); e.gain.linearRampToValueAtTime(.0001, t + dec); } else e.gain.exponentialRampToValueAtTime(.0001, t + dec); o.connect(e); e.connect(out); o.start(t); o.stop(t + dec + .05); return o; };
-    if (kind === 'kalimba') { tone('sine', f, gain * 1.05, .003, len * .8); tone('sine', f * 2, gain * .22, .003, .18); tone('sine', f * 5.1, gain * .06, .002, .06); }
-    else if (kind === 'flute') { const d = Math.min(len, 2.2), o = tone('sine', f, gain * .5, .07, d, d * .72); tone('sine', f * 2, gain * .06, .09, d, d * .6); tone('sine', f * 3, gain * .02, .1, d * .8, d * .5);
-      const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 5 + this.fj() * .4; lg.gain.value = 7; lfo.connect(lg); lg.connect(o.detune); lfo.start(t); lfo.stop(t + d + .05); }
-    else { tone('triangle', f, gain * .8, .004, len * .95); tone('sine', f * 2, gain * .26, .004, len * .5); tone('sine', f * 3, gain * .1, .004, len * .25); }   // piano
-  }
-  _pad(ctx, t, freqs, dur) { // しずかな部分の和音: ゆっくり立ちあがって、ゆっくり消える（ノイズなし）
-    for (const f of freqs) for (const det of [-4, 4]) { const o = ctx.createOscillator(), e = ctx.createGain(), lp = ctx.createBiquadFilter(); o.type = 'triangle'; o.frequency.value = f; o.detune.value = det; lp.type = 'lowpass'; lp.frequency.value = 1100;
-      e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(.024, t + 1.4); e.gain.setValueAtTime(.024, t + dur - 1.6); e.gain.linearRampToValueAtTime(0, t + dur); o.connect(lp); lp.connect(e); e.connect(this.bus); o.start(t); o.stop(t + dur + .1); }
-  }
-  scheduleQuiet(ctx, qb, t) { // メロディなしの しずかな小節(4小節): ゆっくりの和音と、ごくまばらな高い鈴
-    const [bass, chord] = BARS[[0, 5, 8, 3][qb % 4]], dur = BAR_SEC * QUIET_SLOW;
-    this._bass(ctx, t, hz(bass), dur * .9, .2); this._pad(ctx, t, [...chord.map(n => hz(n)), hz(bass) * 2], dur + .6);
-    this._bell(ctx, t + dur * .45, hz(chord[1]) * 2, 2.6, .07); if (qb % 2 === 1) this._bell(ctx, t + dur * .78, hz(chord[0]) * 2, 2.2, .05);
-  }
   _bass(ctx, t, f, len, gain) {
-    const o = ctx.createOscillator(), e = ctx.createGain(), lp = ctx.createBiquadFilter(); o.type = 'triangle'; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = 520;
-    e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(gain, t + .02); e.gain.exponentialRampToValueAtTime(.0001, t + len);
+    const o = ctx.createOscillator(), e = ctx.createGain(), lp = ctx.createBiquadFilter(); o.type = 'triangle'; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = 420;
+    e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(gain, t + .04); e.gain.exponentialRampToValueAtTime(.0001, t + len);
     o.connect(lp); lp.connect(e); e.connect(this.bus); o.start(t); o.stop(t + len + .05);
   }
-  // 伴奏のかたち（毎小節「ズン・チャッ・チャッ」にならないよう、5種類を入れかえる）
-  //  0=ふつうのワルツ 1=アルペジオ(のぼる) 2=のばす(ふわっと) 3=2拍目を休む(ゆれる) 4=細かいくずし
-  _pattern(i) {
-    const loop = Math.floor(i / LOOP_BARS) % PLAN_LOOPS, bar = i % LOOP_BARS, mode = PLAN[loop][1];
-    if (bar === 0) return mode === 'sparse' ? 2 : 0;           // 頭はワルツで、拍をそろえる（しずかな周はふわっと）
-    if (bar === 7 || bar === 15) return 2;                       // 区切りはふわっと終わる
-    if (mode === 'sparse') return bar % 2 ? 3 : 2;               // しずかな周: のばす／2拍目を休む
-    const seq = [0, 1, 0, 3, 4, 0, 1, 3, 0, 4, 1, 0, 3, 1, 0], k = (bar * 7 + [0, 7, 3, 11, 5, 13, 9, 2][loop]) % seq.length;   // 周ごとに並びがずれる
-    let p = seq[k]; if (i > 0 && p === this._lastPat && p !== 2) p = (p + 1 + loop) % 5; return p;
+  _pad(ctx, t, freqs, dur) { // いつも うっすら流れる和音のしき物（ゆっくり立ちあがり・消える）。音数が減っても、場面が切りかわった感じがしないための つなぎ役
+    for (const f of freqs) { const o = ctx.createOscillator(), e = ctx.createGain(), lp = ctx.createBiquadFilter(); o.type = 'triangle'; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = 800;
+      e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(.011, t + 1.0); e.gain.setValueAtTime(.011, t + dur - 1.0); e.gain.linearRampToValueAtTime(0, t + dur); o.connect(lp); lp.connect(e); e.connect(this.bus); o.start(t); o.stop(t + dur + .1); }
   }
-  scheduleBar(ctx, i, t) { // i番目の小節を、時刻tから鳴らす
-    const b16 = i % LOOP_BARS, loopI = Math.floor(i / LOOP_BARS) % PLAN_LOOPS, [melKind, mode, trans] = PLAN[loopI], pat = this._pattern(i); this._lastPat = pat;
-    const [bass, chord] = BARS[b16], mel = MELS[melKind][b16], tr = Math.pow(2, trans / 12), timbre = PLAN[loopI][4];
-    const lower = mode === 'low' ? .5 : 1, st = (n, m = 1) => hz(n) * m * tr;
-    // 低音
-    if (pat === 2) this._bass(ctx, t, st(bass), BEAT * 2.8, .32);
-    else if (pat === 1 || pat === 4) this._bass(ctx, t, st(bass), BEAT * 1.2, .3);
-    else this._bass(ctx, t, st(bass), BEAT * 1.6, .34);
-    if (pat === 1 && i % 2 === 1) this._bass(ctx, t + BEAT * 2, st(bass, 1.5), BEAT * .9, .16);   // 5度の低音をそっと足す
-    // 和音まわり
-    const [c1, c2] = chord;
-    if (pat === 0) { for (const b of [1, 2]) { this._bell(ctx, t + b * BEAT, st(c1), BEAT * 1.1, .08); this._bell(ctx, t + b * BEAT + .012, st(c2), BEAT * 1.1, .08); } }
-    else if (pat === 1) { this._bell(ctx, t + BEAT, st(c1), BEAT * 1.0, .075); this._bell(ctx, t + BEAT * 1.5, st(c2), BEAT * 1.0, .07); this._bell(ctx, t + BEAT * 2, st(c1, 2), BEAT * 1.2, .06); this._bell(ctx, t + BEAT * 2.5, st(c2, 2), BEAT * 1.2, .055); }
-    else if (pat === 2) { this._bell(ctx, t + BEAT, st(c1), BEAT * 2.2, .075); this._bell(ctx, t + BEAT + .02, st(c2), BEAT * 2.2, .07); }
-    else if (pat === 3) { this._bell(ctx, t + BEAT * 2, st(c1), BEAT * 1.2, .08); this._bell(ctx, t + BEAT * 2 + .012, st(c2), BEAT * 1.2, .08); }
-    else { for (const [b, n, m] of [[1, c1, 1], [1.5, c2, 1], [2, c1, 2], [2.5, c2, 1]]) this._bell(ctx, t + b * BEAT, st(n, m), BEAT * .9, .06); }
-    // メロディ（周ごとに少しずつ変える）: 0=そのまま 1=高いきらめき 2=1オクターブ下でやさしく 3=かざり音と、ながい音に3度のハーモニー
+  // 伴奏のかたち: 0=ふつうのワルツ 1=アルペジオ 2=のばす 3=2拍目を休む。音数は density で少しずつ増減（音を へらすことで変化をつける）
+  _pattern(i) {
+    const bar = i % LOOP_BARS; if (bar === 0) return 0; if (bar === 7 || bar === 15) return 2;
+    const r = hash(i, 1); return r < .38 ? 0 : r < .62 ? 1 : r < .8 ? 3 : 2;
+  }
+  scheduleBar(ctx, i, t) {
+    const loop = Math.floor(i / LOOP_BARS) % LOOPS, b16 = i % LOOP_BARS, [bass, chord] = BARS[b16], mel = MELS[ORDER[loop]][b16], pat = this._pattern(i), dens = density(i);
+    const keep = (k, p = 1) => hash(i, k) < Math.min(1, dens * p);   // 伴奏の音を へらすかどうか
+    // 低音（ほぼ毎小節。しずかなときだけ、ときどき休む）
+    if (b16 === 0 || keep(2, 1.25)) this._bass(ctx, t, hz(bass), BEAT * (pat === 2 ? 2.7 : 1.7), pat === 2 ? .22 : .25);
+    // 和音の鈴
+    const [c1, c2] = chord, g = .05;
+    if (pat === 0) { for (const [b, k] of [[1, 3], [2, 4]]) if (keep(k)) { this._bell(ctx, t + b * BEAT, hz(c1), BEAT * 1.2, g); this._bell(ctx, t + b * BEAT + .015, hz(c2), BEAT * 1.2, g); } }
+    else if (pat === 1) { [[1, c1, 1, 5], [1.5, c2, 1, 6], [2, c1, 2, 7], [2.5, c2, 2, 8]].forEach(([b, n, m, k]) => { if (keep(k)) this._bell(ctx, t + b * BEAT, hz(n) * m, BEAT * 1.1, g * .9); }); }
+    else if (pat === 2) { if (keep(9, 1.2)) { this._bell(ctx, t + BEAT, hz(c1), BEAT * 2.2, g); this._bell(ctx, t + BEAT + .02, hz(c2), BEAT * 2.2, g * .9); } }
+    else if (keep(10)) { this._bell(ctx, t + BEAT * 2, hz(c1), BEAT * 1.3, g); this._bell(ctx, t + BEAT * 2 + .015, hz(c2), BEAT * 1.3, g); }
+    // しき物の和音（毎小節うっすら）
+    this._pad(ctx, t, [hz(c1), hz(c2), hz(bass) * 2], BAR_SEC + 1.0);
+    // メロディ（主役の音色はずっと同じ・控えめな音量）。フレーズの終わりの小節(4・8・12・16)は、density が低いとき、最後の1音を休むことがある
     let at = 0;
-    for (const [n, beats] of mel) {
-      if (n === 'R') { at += beats; continue; }   // 休符（息つぎ）
-      const f = st(n, lower), len = Math.max(.9, beats * BEAT * (mode === 'sparse' ? 2 : 1.4)), g = mode === 'low' ? .15 : mode === 'sparse' ? .13 : .17;
-      if (mode === 'orn' && beats >= 1) this._bell(ctx, t + at * BEAT - BEAT * .14, f * Math.pow(2, -2 / 12), BEAT * .3, .06);   // かざり音(1つ下から)
-      if (mode !== 'sparse' || at === 0 || beats >= 2) this._mvoice(ctx, timbre, t + at * BEAT, f, len, g);
-      if (mode === 'sparkle' && beats >= 1.5) this._bell(ctx, t + at * BEAT + BEAT * .5, f * 2, .7, .045);
-      if (mode === 'orn' && beats >= 2) this._bell(ctx, t + at * BEAT + .02, f * Math.pow(2, -3 / 12), len * .9, .06);       // 3度ほど下の音で ふくらませる
+    for (let k = 0; k < mel.length; k++) {
+      const [n, beats] = mel[k]; if (n === 'R') { at += beats; continue; }
+      const isEnd = (b16 % 4 === 3) && k === mel.length - 1 && mel.length > 1, skip = isEnd && dens < .62 && hash(i, 11) < .7;
+      if (!skip) this._bell(ctx, t + at * BEAT, hz(n), Math.max(1.0, beats * BEAT * 1.4), .12);
       at += beats;
     }
   }
-  // 画面を最初にさわったとき（ブラウザの決まりで、音は操作のあとにしか出せない）
   unlock() { if (!this.enabled) return; this._init(); if (!this.ctx) return; this.ctx.resume?.(); this._start(); }
-  _bed() { // ごく小さな ピンクノイズの空気（風のような 1/f の音）。小節ごとにゆっくり強さが変わる
-    if (this.bedGain || !this.ctx) return; const ctx = this.ctx, n = ctx.sampleRate * 8, buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
-    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, sd = 5; const rnd = () => ((sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296) * 2 - 1;
-    for (let i = 0; i < n; i++) { const w = rnd(); b0 = .99886 * b0 + w * .0555179; b1 = .99332 * b1 + w * .0750759; b2 = .969 * b2 + w * .153852; b3 = .8665 * b3 + w * .3104856; b4 = .55 * b4 + w * .5329522; b5 = -.7616 * b5 - w * .016898; d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * .11; b6 = w * .115926; }
-    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700; const g = ctx.createGain(); g.gain.value = .02;
-    src.connect(lp); lp.connect(g); g.connect(this.master); src.start(); this.bedGain = g;
-  }
-  _advance() { // 曲の流れを少しずつ進めて音を予約する
-    const seg = SEGS[this.seg], ctx = this.ctx;
-    if (seg === 'q') { this.scheduleQuiet(ctx, this.segBar, this.next); this.next += BAR_SEC * QUIET_SLOW; if (++this.segBar >= QUIET_BARS) this._nextSeg(); }
-    else { this.scheduleBar(ctx, seg * LOOP_BARS + this.segBar, this.next); this.next += BAR_SEC / PLAN[seg][3] * (1 + this.ft() * .008); if (++this.segBar >= LOOP_BARS) this._nextSeg(); }
-  }
-  _nextSeg() { this.seg = (this.seg + 1) % SEGS.length; this.segBar = 0; }
   _start() {
     if (this.running || !this.ctx) return; this.running = true; this.next = this.ctx.currentTime + .15;
     this.timer = setInterval(() => { // 先回りして、すこし先の小節まで予約する
-      if (this.next < this.ctx.currentTime) this.next = this.ctx.currentTime + .05;   // 遅れたぶんは まとめて鳴らさず、いまから続ける
-      while (this.next < this.ctx.currentTime + .8) this._advance();
+      if (this.next < this.ctx.currentTime) this.next = this.ctx.currentTime + .05;
+      while (this.next < this.ctx.currentTime + .8) { this.scheduleBar(this.ctx, this.bar++, this.next); this.next += BAR_SEC * (1 + this.ft() * .003); }
     }, 120);
   }
   setEnabled(on) {
     this.enabled = on;
-    if (!on) { this.running = false; clearInterval(this.timer); if (this.master) { const t = this.ctx.currentTime; this.master.gain.cancelScheduledValues(t); this.master.gain.setTargetAtTime(0, t, .15); } }
-    else { this._init(); if (this.master) this.master.gain.setTargetAtTime(this.vol, this.ctx.currentTime, .15); this.ctx?.resume?.(); this._start(); }
+    if (!on) { this.running = false; clearInterval(this.timer); if (this.master) { const t = this.ctx.currentTime; this.master.gain.cancelScheduledValues(t); this.master.gain.setTargetAtTime(0, t, .2); } }
+    else { this._init(); if (this.master) this.master.gain.setTargetAtTime(this.vol, this.ctx.currentTime, .2); this.ctx?.resume?.(); this._start(); }
   }
   hidden(h) { if (!this.ctx) return; if (h) this.ctx.suspend?.(); else if (this.enabled) this.ctx.resume?.(); }
 }
-// 動作確認用: 画面に出さず、指定のまとまり(0..9)を計算する（ピークの確認など）
-export async function renderSeg(seg, seconds = 30) {
-  const sr = 22050, ctx = new OfflineAudioContext(1, sr * seconds, sr), mb = new MusicBox(); mb.ctx = ctx; mb._graph(ctx, ctx.destination, .9); mb.seg = seg; mb.segBar = 0; mb.next = 0;
-  let g = 0; while (mb.next < seconds && g++ < 400 && mb.seg === seg) mb._advance();
+// 動作確認・書き出し用: 画面に出さず、先頭から seconds 秒ぶんを計算する
+export async function renderOffline(seconds = 30, sr = 22050) {
+  const ctx = new OfflineAudioContext(1, Math.floor(sr * seconds), sr), mb = new MusicBox(); mb._graph(ctx, ctx.destination, .8);
+  let t = 0, i = 0; while (t < seconds) { mb.scheduleBar(ctx, i++, t); t += BAR_SEC; }
   return ctx.startRendering();
 }
-export const renderOffline = (seconds = 30) => renderSeg(0, seconds);
-export const MELODIES = MELS;
