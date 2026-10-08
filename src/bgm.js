@@ -83,9 +83,14 @@ export class MusicBox {
     e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(gain, t + .04); e.gain.exponentialRampToValueAtTime(.0001, t + len);
     o.connect(lp); lp.connect(e); e.connect(this.bus); o.start(t); o.stop(t + len + .05);
   }
-  _pad(ctx, t, freqs, dur) { // いつも うっすら流れる和音のしき物（ゆっくり立ちあがり・消える）。音数が減っても、場面が切りかわった感じがしないための つなぎ役
+  _pad(ctx, t, freqs, dur, amp = .011) { // いつも うっすら流れる和音のしき物（ゆっくり立ちあがり・消える）。音数が減っても、場面が切りかわった感じがしないための つなぎ役
     for (const f of freqs) { const o = ctx.createOscillator(), e = ctx.createGain(), lp = ctx.createBiquadFilter(); o.type = 'triangle'; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = 800;
-      e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(.011, t + 1.0); e.gain.setValueAtTime(.011, t + dur - 1.0); e.gain.linearRampToValueAtTime(0, t + dur); o.connect(lp); lp.connect(e); e.connect(this.bus); o.start(t); o.stop(t + dur + .1); }
+      e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(amp, t + 1.0); e.gain.setValueAtTime(amp, t + dur - 1.0); e.gain.linearRampToValueAtTime(0, t + dur); o.connect(lp); lp.connect(e); e.connect(this.bus); o.start(t); o.stop(t + dur + .1); }
+  }
+  _sparkle(ctx, t, i) { // 星くずのきらめき: 3〜4音が ゆっくり のぼる。音階は少し不思議な「全音」寄り(F#を含む)。とても小さく・やわらかい立ち上がり
+    const scale = ['E6', 'F#6', 'G#6', 'A6', 'C7', 'D7', 'E7'], start = Math.floor(hash(i, 22) * 3), n = 3 + (hash(i, 23) < .4 ? 1 : 0);
+    for (let k = 0; k < n; k++) { const f = hz(scale[start + k]), tt = t + k * .17, o = ctx.createOscillator(), e = ctx.createGain(); o.type = 'sine'; o.frequency.value = f;
+      e.gain.setValueAtTime(0, tt); e.gain.linearRampToValueAtTime(.022 * (1 - k * .12), tt + .03); e.gain.exponentialRampToValueAtTime(.0001, tt + 2.4); o.connect(e); e.connect(this.bus); o.start(tt); o.stop(tt + 2.5); }
   }
   // 伴奏のかたち: 0=ふつうのワルツ 1=アルペジオ 2=のばす 3=2拍目を休む。音数は density で少しずつ増減（音を へらすことで変化をつける）
   _pattern(i) {
@@ -104,7 +109,11 @@ export class MusicBox {
     else if (pat === 2) { if (keep(9, 1.2)) { this._bell(ctx, t + BEAT, hz(c1), BEAT * 2.2, g); this._bell(ctx, t + BEAT + .02, hz(c2), BEAT * 2.2, g * .9); } }
     else if (keep(10)) { this._bell(ctx, t + BEAT * 2, hz(c1), BEAT * 1.3, g); this._bell(ctx, t + BEAT * 2 + .015, hz(c2), BEAT * 1.3, g); }
     // しき物の和音（毎小節うっすら）
+    const COLOR = { A: 'B4', D: 'E4', E: 'F#4', F: 'G4', C: 'D4', G: 'A4' };   // Am(add9)・Fadd9 など、やさしく少し不思議な響き（かわいさは残す）
     this._pad(ctx, t, [hz(c1), hz(c2), hz(bass) * 2], BAR_SEC + 1.0);
+    this._pad(ctx, t + BEAT * .5, [hz(COLOR[bass[0]])], BAR_SEC * 1.2, .006);   // 色の音は、ほんのり遅れて・とても小さく
+    // きらきら: フレーズの終わりなどで、ごくたまに、高くて小さな鈴が ふわっと のぼる（星くずのような音）
+    if (b16 % 4 === 3 && hash(i, 20) < .5 && dens < .95) this._sparkle(ctx, t + BEAT * (1.4 + hash(i, 21) * .8), i);
     // メロディ（主役の音色はずっと同じ・控えめな音量）。フレーズの終わりの小節(4・8・12・16)は、density が低いとき、最後の1音を休むことがある
     let at = 0;
     for (let k = 0; k < mel.length; k++) {
