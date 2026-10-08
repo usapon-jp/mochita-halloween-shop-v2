@@ -8,6 +8,7 @@ import { SHOTS, CameraRig } from './cameras.js';
 import { MOCHITA, walkSpeed } from './config.js';
 import { buildProceduralMochita } from './mochita_proc.js';
 import { SweetHunt } from './sweets.js';
+import { MusicBox } from './bgm.js';
 import { Walker, attachControls, pickTarget, takePhoto, buildProxies } from './play.js';
 const PAD_TOP = 0.045; // 座布団のミント敷物の上面（SLOTからの高さ）
 const q0 = new URLSearchParams(location.search);
@@ -480,3 +481,14 @@ let installEv = null; const installRow = document.getElementById('install-row'),
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; installRow.hidden = false; });
 installBtn.addEventListener('click', async () => { if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch {} installEv = null; installRow.hidden = true; });
 addEventListener('appinstalled', () => { installRow.hidden = true; toast('アプリに入れました'); });
+
+// ---- BGM（オルゴール風ワルツ）: 最初にさわったときから流れる。右上の音符ボタンでON/OFF（?bgm=0 で最初からOFF）----
+{
+  const mb = new MusicBox(), btn = document.getElementById('bgm'); let saved = null; try { saved = localStorage.getItem('mochita-v2-bgm'); } catch {}
+  mb.enabled = q.get('bgm') === '0' ? false : saved !== '0'; btn.setAttribute('aria-pressed', mb.enabled);
+  const first = () => { removeEventListener('pointerdown', first, true); removeEventListener('keydown', first, true); mb.unlock(); };
+  addEventListener('pointerdown', first, true); addEventListener('keydown', first, true);
+  btn.addEventListener('click', () => { const on = !mb.enabled; mb.setEnabled(on); btn.setAttribute('aria-pressed', on); try { localStorage.setItem('mochita-v2-bgm', on ? '1' : '0'); } catch {} toast(on ? 'おんがく ON' : 'おんがく OFF'); });
+  document.addEventListener('visibilitychange', () => mb.hidden(document.hidden));
+  window.__bgm = mb;
+}

@@ -257,3 +257,8 @@ body.placing #cluster{opacity:.5}
 .how li b{white-space:normal;line-height:1.35}   /* 「ジャンプ／ダッシュ」「プレゼント／ボックス」は改行してかぶらないように */
 #panel .seg{margin-bottom:22px}                  /* 歩く速さなどの下に 1行分のあき */
 #panel h3{margin-top:16px}
+
+/* ---- おんがくボタン（右上）: OFFのときは斜めの線 ---- */
+#bgm{position:relative}
+#bgm[aria-pressed=false]{opacity:.8}
+#bgm[aria-pressed=false]::after{content:"";position:absolute;left:9px;right:9px;top:50%;height:2px;margin-top:-1px;background:#fff;border-radius:2px;transform:rotate(-45deg)}
