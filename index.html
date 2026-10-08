@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>もちたの小さな雑貨とおやつのお店</title>
 <link rel="stylesheet" href="./style.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#f7a95c">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="もちたのお店">
 </head>
 <body>
 <!-- 手描き風アイコン（自作SVG。絵文字・文字の流用はしない）。色は style.css の変数で季節ごとに変わる -->
@@ -131,6 +138,10 @@
       <h3>あるくはやさ</h3>
       <div class="seg" id="speed" role="group" aria-label="あるくはやさ">
         <button data-rate="0.95">ゆっくり</button><button data-rate="1.35" class="on">ふつう</button><button data-rate="1.9">はやい</button>
+      </div>
+      <div id="install-row" hidden>
+        <h3>アプリ</h3>
+        <div class="seg"><button id="install-app">アプリとして入れる</button></div>
       </div>
       <h3>お菓子さがし</h3>
       <div class="seg"><button id="sweets-reset">はじめからやりなおす</button></div>

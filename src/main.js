@@ -473,3 +473,10 @@ function perf(dt) {
 window.__shot = async (name) => { renderer.shadowMap.needsUpdate = true; renderer.render(scene, rig.camera); const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', .92)); const res = await fetch('/__save/' + name, { method: 'POST', body: blob }); return res.status; };
 window.__scene = scene; window.__renderer = renderer; window.__setShot = setShot; window.__T = () => T;
 tick();
+
+// ---- アプリ化(PWA): サービスワーカーの登録と「アプリとして入れる」ボタン ----
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
+let installEv = null; const installRow = document.getElementById('install-row'), installBtn = document.getElementById('install-app');
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; installRow.hidden = false; });
+installBtn.addEventListener('click', async () => { if (!installEv) return; installEv.prompt(); try { await installEv.userChoice; } catch {} installEv = null; installRow.hidden = true; });
+addEventListener('appinstalled', () => { installRow.hidden = true; toast('アプリに入れました'); });

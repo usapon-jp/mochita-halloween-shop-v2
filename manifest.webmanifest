@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "もちたの小さな雑貨とおやつのお店",
+  "short_name": "もちたのお店",
+  "description": "もちたの小さなお店の箱庭。歩く・ジャンプ・お菓子さがし・写真。",
+  "lang": "ja",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7a95c",
+  "theme_color": "#f7a95c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
