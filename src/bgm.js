@@ -1,8 +1,8 @@
 // BGM: ブラウザの中で演奏する、オルゴール風のやさしいハロウィン・ワルツ（3拍子）。
 // 音声ファイルを使わず、その場で音を合成するので、ファイルの重さも著作権の心配もない（この曲はこのプロジェクトのオリジナル）。
 const BPM = 104, BEAT = 60 / BPM;
-const NOTE = { C: 0, Db: 1, 'C#': 1, D: 2, 'D#': 3, E: 4, F: 5, 'F#': 6, G: 7, 'G#': 8, A: 9, 'A#': 10, Bb: 10, B: 11, Eb: 3 };
-const hz = n => { const m = /^([A-G][#b]?)(\d)$/.exec(n); return 440 * Math.pow(2, (NOTE[m[1]] + 12 * (+m[2] + 1) - 69) / 12); };
+const NOTE = { C: 0, 'C#': 1, D: 2, 'D#': 3, E: 4, F: 5, 'F#': 6, G: 7, 'G#': 8, A: 9, 'A#': 10, B: 11 };
+const hz = n => { const m = /^([A-G]#?)(\d)$/.exec(n); return 440 * Math.pow(2, (NOTE[m[1]] + 12 * (+m[2] + 1) - 69) / 12); };
 // 1小節ごとの [コード低音, [和音の音...], [メロディ: [音, 拍数]...]]（16小節で1周）
 const BARS = [
   ['A2', ['C4', 'E4'], [['E5', 1], ['A5', 1], ['C6', 1]]],
@@ -41,28 +41,14 @@ const PLAN = [
   ['C', 'base', 0, 1.02], ['C', 'orn', 0, 1.03], ['A', 'orn', 2, 1.02], ['C', 'sparse', 0, .95],
 ];
 export const PLAN_LOOPS = PLAN.length;
-// 場面の並び: ワルツ(2周ずつ)の合間に、雨・星空・小川・月あかり。ワルツが戻ってくるまで ほかの雰囲気になる（約6分40秒でひとめぐり）
-const SCENES = [
-  { k: 'waltz', loops: [0, 1] }, { k: 'nature', mood: 'rain', dur: 38 },
-  { k: 'waltz', loops: [2, 3] }, { k: 'pad', mood: 'stars', dur: 56 },
-  { k: 'waltz', loops: [4, 5] }, { k: 'nature', mood: 'stream', dur: 40 },
-  { k: 'waltz', loops: [6, 7] }, { k: 'pad', mood: 'moon', dur: 52 },
-];
-const MOODS = {
-  rain: { wind: .01, rain: .05, drops: 0, notes: ['D5', 'F#5', 'A5'], bellG: .045, chords: [['D3', 'A3', 'F#4'], ['B2', 'F#3', 'D4']] },
-  stream: { wind: .008, stream: .06, drops: 1, chimes: 1, notes: ['G5', 'A5', 'D6'], bellG: .05 },
-  stars: { wind: .006, crickets: 1, owl: 1, notes: ['D5', 'E5', 'F#5', 'A5', 'B5', 'D6'], bellG: .1, chords: [['D3', 'A3', 'F#4'], ['B2', 'F#3', 'D4'], ['G2', 'D3', 'B3'], ['A2', 'E3', 'C#4']] },
-  moon: { wind: .012, crickets: .6, chimes: 1, notes: ['F5', 'G5', 'A5', 'C6', 'D6'], bellG: .09, chords: [['F2', 'C3', 'A3', 'E4'], ['Bb2', 'F3', 'D4'], ['D3', 'A3', 'C4', 'F4'], ['C3', 'G3', 'Bb3', 'E4']] },
-};
 export const BAR_SEC = 3 * BEAT, LOOP_BARS = BARS.length;
-export const SCENE_COUNT = () => SCENES.length;
-export const TOTAL_SEC = () => SCENES.reduce((a, sc) => a + (sc.k === 'waltz' ? sc.loops.reduce((b, l) => b + LOOP_BARS * BAR_SEC / PLAN[l][3], 0) : sc.dur), 0);
+export const TOTAL_SEC = () => PLAN.reduce((a, p) => a + LOOP_BARS * BAR_SEC / p[3], 0);
 
 export class MusicBox {
-  constructor() { this.fj = pink(7, 11); this.fv = pink(7, 23); this.ft = pink(5, 37); this.ctx = null; this.enabled = true; this.running = false; this.bar = 0; this._lastPat = -1; this.next = 0; this.timer = null; this.vol = .9; this.fr = pink(7, 51); this.si = 0; this.entering = true; this.sbar = 0; this.t0 = 0; this.nb = {}; }
+  constructor() { this.fj = pink(7, 11); this.fv = pink(7, 23); this.ft = pink(5, 37); this.ctx = null; this.enabled = true; this.running = false; this.bar = 0; this._lastPat = -1; this.next = 0; this.timer = null; this.vol = .9; }
   _init() {
     if (this.ctx) return; const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; this.ctx = new AC();
-    this._graph(this.ctx, this.ctx.destination, this.vol); this._layers(this.ctx);
+    this._graph(this.ctx, this.ctx.destination, this.vol);
   }
   // 音の通り道: 全体の音量 → ゆるい圧縮 → 出口。やわらかい残響は短い遅延のくりかえしで作る
   _graph(ctx, out, vol) {
@@ -128,80 +114,19 @@ export class MusicBox {
   }
   // 画面を最初にさわったとき（ブラウザの決まりで、音は操作のあとにしか出せない）
   unlock() { if (!this.enabled) return; this._init(); if (!this.ctx) return; this.ctx.resume?.(); this._start(); }
-  // ===== 場面（曲の流れ）: ワルツの合間に、ちがう雰囲気の場面（自然の音・星空・月あかり）をはさむ。ワルツが戻るまで予測しにくくなる =====
-  // 自然の音は、ブラウザの中でノイズから合成（ファイルなし）。いつも流れているのは「風・雨・小川」の3つの層で、場面ごとに音量だけ変える。
-  _layers(ctx) {
-    const n = ctx.sampleRate * 4, buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0); let sd = 7; for (let k = 0; k < n; k++) { sd = (sd * 1664525 + 1013904223) >>> 0; d[k] = (sd / 4294967296) * 2 - 1; }
-    const nat = ctx.createGain(); nat.gain.value = 1; nat.connect(this.master); this.nat = nat;
-    const mk = (type, f, q) => { const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true; src.loopStart = Math.random() * 3; const fl = ctx.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; const g = ctx.createGain(); g.gain.value = 0; src.connect(fl); fl.connect(g); g.connect(nat); src.start(); return { fl, g }; };
-    this.L = { wind: mk('bandpass', 420, .55), rain: mk('highpass', 1900, .5), stream: mk('bandpass', 1100, .9) };
-    // 小川のゆれ: 2つのゆっくりした波で、ろ過の中心をゆらす（さらさら・ぽこぽこ）
-    for (const [fr, amt] of [[3.1, 220], [5.3, 160]]) { const o = ctx.createOscillator(), a = ctx.createGain(); o.frequency.value = fr; a.gain.value = amt; o.connect(a); a.connect(this.L.stream.fl.frequency); o.start(); }
-    const bed = ctx.createBufferSource(); bed.buffer = buf; bed.loop = true; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700; const g = ctx.createGain(); g.gain.value = .02; bed.connect(lp); lp.connect(g); g.connect(nat); bed.start(); this.bedGain = g;   // ごく小さな空気の層
+  _bed() { // ごく小さな ピンクノイズの空気（風のような 1/f の音）。小節ごとにゆっくり強さが変わる
+    if (this.bedGain || !this.ctx) return; const ctx = this.ctx, n = ctx.sampleRate * 8, buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, sd = 5; const rnd = () => ((sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296) * 2 - 1;
+    for (let i = 0; i < n; i++) { const w = rnd(); b0 = .99886 * b0 + w * .0555179; b1 = .99332 * b1 + w * .0750759; b2 = .969 * b2 + w * .153852; b3 = .8665 * b3 + w * .3104856; b4 = .55 * b4 + w * .5329522; b5 = -.7616 * b5 - w * .016898; d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * .11; b6 = w * .115926; }
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true; const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700; const g = ctx.createGain(); g.gain.value = .02;
+    src.connect(lp); lp.connect(g); g.connect(this.master); src.start(); this.bedGain = g;
   }
-  _layerTo(name, v, t, tc = 2.5) { this.L[name].g.gain.setTargetAtTime(v, Math.max(t, this.ctx.currentTime), tc); }
-  _enter(sc, t) { // 場面に入る: 自然音の層を、場面に合わせてゆっくり切りかえる
-    const m = sc.k === 'waltz' ? { wind: .008, rain: 0, stream: 0 } : (MOODS[sc.mood] || {});
-    for (const k of ['wind', 'rain', 'stream']) this._layerTo(k, m[k] || 0, t, 2.2);
-    this.t0 = t; this.nb = { bell: t + .5, drop: t + 1, chime: t + 3, cricket: t + 1.5, owl: t + 12, wgust: t, pad: t - 99 };
-  }
-  _next() { this.si = (this.si + 1) % SCENES.length; this.entering = true; this.sbar = 0; }
-  _advance() { // 場面を、すこしずつ先へ進めて音を予約する
-    const sc = SCENES[this.si], ctx = this.ctx;
-    if (this.entering) { this._enter(sc, this.next); this.entering = false; }
-    if (sc.k === 'waltz') {
-      const idx = this.sbar, loopI = sc.loops[Math.floor(idx / LOOP_BARS)];
-      this.scheduleBar(ctx, loopI * LOOP_BARS + idx % LOOP_BARS, this.next); this.next += BAR_SEC / PLAN[loopI][3] * (1 + this.ft() * .008); this.sbar++;
-      if (this.sbar >= sc.loops.length * LOOP_BARS) this._next();
-    } else { this._ambient(sc, this.next, 1); this.next += 1; if (this.next - this.t0 >= sc.dur) this._next(); }
-  }
-  _ambient(sc, t, step) {
-    const ctx = this.ctx, m = MOODS[sc.mood] || {}, nb = this.nb, tt = t - this.t0, rate = (fn) => 1 + (fn() * .5);
-    // 風: いっしゅん強まったり弱まったり（1/fのゆれ）
-    this.L.wind.fl.frequency.setTargetAtTime(300 + 400 * (this.fr() * .5 + .5), t, .8);
-    if (m.wind) this._layerTo('wind', m.wind * (.6 + .8 * (this.fv() * .5 + .5)), t, .9);
-    // 和音のおと(パッド): 8秒ごとに和音をかえて、ふわっと重ねる
-    if (m.chords && Math.floor(tt / 8) !== Math.floor((tt - step) / 8) || (m.chords && tt < step)) { const ch = m.chords[Math.floor(tt / 8) % m.chords.length]; this._pad(ctx, t, ch.map(n => hz(n)), 9.5); }
-    // やさしい鈴(ペンタトニック): 間隔は1/fでふぞろい
-    while (m.notes && nb.bell < t + step) { const n = m.notes[Math.floor((this.fr() * .5 + .5) * m.notes.length * .999) % m.notes.length]; this._bell(ctx, nb.bell, hz(n), 3.6, m.bellG || .1); nb.bell += 1.3 + (1 + this.fj()) * 1.4; }
-    // 水のしずく
-    while (m.drops && nb.drop < t + step) { this._drop(ctx, nb.drop, m.drops); nb.drop += .12 + Math.random() * (1.6 / m.drops); }
-    // 風鈴・チャイム(ふぞろいな高い音)
-    while (m.chimes && nb.chime < t + step) { const ch = ['G6', 'A6', 'D7', 'E6', 'B6'][Math.floor(Math.random() * 5)]; this._chime(ctx, nb.chime, hz(ch)); nb.chime += 3 + Math.random() * 5; }
-    // すず虫
-    while (m.crickets && nb.cricket < t + step) { this._cricket(ctx, nb.cricket, m.crickets); nb.cricket += 1.6 + Math.random() * 3; }
-    // ふくろう（遠くで、ときどき）
-    while (m.owl && nb.owl < t + step) { this._owl(ctx, nb.owl); nb.owl += 28 + Math.random() * 20; }
-    // 雨つぶ
-    if (m.rain && Math.random() < .8) this._drip(ctx, t + Math.random(), 2600 + Math.random() * 2500, m.rain);
-  }
-  _pad(ctx, t, freqs, dur) { // ゆっくり立ちあがって、ゆっくり消える和音（やわらかい三角波）
-    for (const f of freqs) for (const det of [-4, 4]) {
-      const o = ctx.createOscillator(), e = ctx.createGain(), lp = ctx.createBiquadFilter(); o.type = 'triangle'; o.frequency.value = f; o.detune.value = det; lp.type = 'lowpass'; lp.frequency.value = 1100;
-      e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(.022, t + 2.6); e.gain.setValueAtTime(.022, t + dur - 2.4); e.gain.linearRampToValueAtTime(0, t + dur);
-      o.connect(lp); lp.connect(e); e.connect(this.bus); o.start(t); o.stop(t + dur + .1);
-    }
-  }
-  _drop(ctx, t, amt) { const o = ctx.createOscillator(), e = ctx.createGain(), f0 = 500 + Math.random() * 700; o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 2, t + .05);
-    e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(.022 * Math.min(1.5, amt), t + .006); e.gain.exponentialRampToValueAtTime(.0001, t + .09); o.connect(e); e.connect(this.nat); o.start(t); o.stop(t + .12); }
-  _drip(ctx, t, f, amt) { const o = ctx.createOscillator(), e = ctx.createGain(); o.type = 'sine'; o.frequency.value = f; e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(.006 * amt, t + .002); e.gain.exponentialRampToValueAtTime(.0001, t + .03); o.connect(e); e.connect(this.nat); o.start(t); o.stop(t + .05); }
-  _chime(ctx, t, f) { for (const [mul, g, dec] of [[1, .05, 3.2], [2.76, .022, 1.8], [5.4, .01, .8]]) { const o = ctx.createOscillator(), e = ctx.createGain(); o.type = 'sine'; o.frequency.value = f * mul; e.gain.setValueAtTime(0, t); e.gain.linearRampToValueAtTime(g, t + .004); e.gain.exponentialRampToValueAtTime(.0001, t + dec); o.connect(e); e.connect(this.bus); o.start(t); o.stop(t + dec + .05); } }
-  _cricket(ctx, t, amt) { // すず虫の「リーン、リーン」: 高い音を、ふるえるようにすこしずつ
-    const f = 4300 + Math.random() * 500, o = ctx.createOscillator(), e = ctx.createGain(); o.type = 'sine'; o.frequency.value = f; const n = 3 + Math.floor(Math.random() * 3);
-    e.gain.setValueAtTime(0, t); for (let k = 0; k < n; k++) { const a = t + k * .16; e.gain.linearRampToValueAtTime(.007 * amt, a + .05); e.gain.linearRampToValueAtTime(.0008, a + .14); }
-    e.gain.linearRampToValueAtTime(0, t + n * .16 + .1); o.connect(e); e.connect(this.nat); o.start(t); o.stop(t + n * .16 + .2); }
-  _owl(ctx, t) { // 遠くの「ホー、ホー」（やわらかい2音）
-    for (const [dt, f] of [[0, 392], [.62, 330]]) { const o = ctx.createOscillator(), o2 = ctx.createOscillator(), e = ctx.createGain(); o.type = 'sine'; o2.type = 'sine'; o.frequency.value = f; o2.frequency.value = f * 2; const g2 = ctx.createGain(); g2.gain.value = .25;
-      e.gain.setValueAtTime(0, t + dt); e.gain.linearRampToValueAtTime(.05, t + dt + .12); e.gain.linearRampToValueAtTime(.03, t + dt + .38); e.gain.linearRampToValueAtTime(0, t + dt + .55);
-      o.connect(e); o2.connect(g2); g2.connect(e); e.connect(this.bus); o.start(t + dt); o2.start(t + dt); o.stop(t + dt + .6); o2.stop(t + dt + .6); } }
-  // 画面を最初にさわったとき（ブラウザの決まりで、音は操作のあとにしか出せない）
-  unlock() { if (!this.enabled) return; this._init(); if (!this.ctx) return; this.ctx.resume?.(); this._start(); }
   _start() {
-    if (this.running || !this.ctx) return; this.running = true; this.next = this.ctx.currentTime + .15;
-    this.timer = setInterval(() => { // 先回りして、すこし先まで予約する
+    if (this.running || !this.ctx) return; this._bed(); this.running = true; this.next = this.ctx.currentTime + .15;
+    this.timer = setInterval(() => { // 先回りして、すこし先の小節まで予約する
       if (this.bedGain) this.bedGain.gain.setTargetAtTime(.013 + .010 * (this.fv() * .5 + .5), this.ctx.currentTime, 1.5);
       if (this.next < this.ctx.currentTime) this.next = this.ctx.currentTime + .05;   // 遅れたぶんは まとめて鳴らさず、いまから続ける
-      while (this.next < this.ctx.currentTime + .8) this._advance();
+      while (this.next < this.ctx.currentTime + .8) { this.scheduleBar(this.ctx, this.bar++, this.next); this.next += BAR_SEC / PLAN[Math.floor((this.bar - 1) / LOOP_BARS) % PLAN_LOOPS][3] * (1 + this.ft() * .008); }
     }, 120);
   }
   setEnabled(on) {
@@ -211,10 +136,9 @@ export class MusicBox {
   }
   hidden(h) { if (!this.ctx) return; if (h) this.ctx.suspend?.(); else if (this.enabled) this.ctx.resume?.(); }
 }
-// 動作確認用: 画面に出さず、指定の場面を計算する（ピークの確認など）
-export async function renderScene(si, seconds = 30) {
-  const sr = 22050, ctx = new OfflineAudioContext(1, sr * seconds, sr), mb = new MusicBox(); mb.ctx = ctx; mb._graph(ctx, ctx.destination, .9); mb._layers(ctx); mb.si = si; mb.entering = true; mb.next = 0;
-  let guard = 0; while (mb.next < seconds && guard++ < 5000) mb._advance();
+// 動作確認用: 画面に出さず、そのままファイル用の音を計算する（ピークの確認など）
+export async function renderOffline(seconds = 30, startBar = 0) {
+  const sr = 22050, ctx = new OfflineAudioContext(1, sr * seconds, sr), mb = new MusicBox(); mb._graph(ctx, ctx.destination, .9);
+  let t = 0; for (let i = startBar; t < seconds; i++) { mb.scheduleBar(ctx, i, t); t += BAR_SEC / PLAN[Math.floor(i / LOOP_BARS) % PLAN_LOOPS][3]; }
   return ctx.startRendering();
 }
-export const renderOffline = (seconds = 30) => renderScene(0, seconds);
