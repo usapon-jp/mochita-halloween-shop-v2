@@ -247,13 +247,13 @@ export function attachControls(canvas, rig, { onTap, onCamera }) {
   canvas.addEventListener('contextmenu', e => e.preventDefault());
 }
 
-// 写真: いまの画面を画像にして、スマホは共有シート、PCは保存。隅に小さくクレジットを入れる（CC BY 4.0）。
+// 写真: いまの画面を画像にして、スマホは共有シート、PCは保存。隅に小さくクレジットを入れる。
 export async function takePhoto(renderer, scene, camera, toast, flash) {
   renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera);
   const src = renderer.domElement, out = document.createElement('canvas'); out.width = src.width; out.height = src.height;
   const g = out.getContext('2d'); g.drawImage(src, 0, 0);
   const fs = Math.max(12, Math.round(out.width * .016)); g.font = `600 ${fs}px "Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif`; g.textAlign = 'right'; g.textBaseline = 'bottom';
-  g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = fs * .3; g.fillStyle = 'rgba(255,255,255,.9)'; g.fillText('もちた ／ 3D: Meshy (CC BY 4.0)', out.width - fs, out.height - fs * .8);
+  g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = fs * .3; g.fillStyle = 'rgba(255,255,255,.9)'; g.fillText('もちた ／ usapon', out.width - fs, out.height - fs * .8);
   flash?.();
   const blob = await new Promise(r => out.toBlob(r, 'image/png')); if (!blob) { toast?.('写真をつくれませんでした'); return; }
   const d = new Date(), pad = n => String(n).padStart(2, '0'), name = `mochita-${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.png`;
