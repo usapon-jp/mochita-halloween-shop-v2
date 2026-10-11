@@ -12,7 +12,7 @@ Three.js で作った、もちたの小さなお店の箱庭です。スマホ�
 
 ## クレジット
 - キャラクター: もちた
-- 3D原型: [Meshy](https://www.meshy.ai/) で画像から生成（[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.ja)）。造形（あご・口もと）・着色・しっぽ・骨組み・動き・軽量化を改変。
+- 3Dモデル: うさぽんオリジナル
 - Three.js (MIT)
 
 ## 技術メモ
