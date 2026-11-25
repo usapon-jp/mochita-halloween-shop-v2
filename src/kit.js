@@ -12,9 +12,11 @@ export const C = {
   white: 0xffffff, gold: 0xf0c869, red: 0xe9788a, blue: 0x9fcbea,
 };
 
-// ---- テーマ: ?theme=pastel で春(元の配色)。既定はハロウィン・秋。 ----
-export const THEME = new URLSearchParams(location.search).get('theme') === 'pastel' ? 'pastel' : 'halloween';
+// ---- テーマ: 既定は冬・クリスマス。?theme=halloween でハロウィン・秋、?theme=pastel で春(元の配色)。 ----
+const THEME_Q = new URLSearchParams(location.search).get('theme');
+export const THEME = THEME_Q === 'pastel' || THEME_Q === 'halloween' ? THEME_Q : 'winter';
 export const HALLOWEEN = THEME === 'halloween';
+export const WINTER = THEME === 'winter';
 export const H = n => '#' + n.toString(16).padStart(6, '0');
 if (HALLOWEEN) Object.assign(C, {
   cream: 0xfff0d8, cream2: 0xffdfb4, milk: 0xfff8ee,
@@ -25,6 +27,15 @@ if (HALLOWEEN) Object.assign(C, {
   leaf: 0xe9a93c, leaf2: 0xc8582c, leaf3: 0xf3cf5a,          // 銀杏の黄・もみじの橙赤
   red: 0xe45a3c, blue: 0xb9a8e4, gold: 0xf0c050,
   ink: 0x3a2c4a, moss: 0x9cc15c, ghost: 0xfffdf8,
+});
+else if (WINTER) Object.assign(C, {
+  cream: 0xfff6ec, cream2: 0xf6e6dc, milk: 0xfffcf8,
+  pink: 0xf3cfdc, rose: 0xe59bb3, deepRose: 0xc8738f,        // いちごミルク
+  mint: 0xd6e6ef, mint2: 0xa9c8dc, deepMint: 0x6f8fb4,       // 雪の日の水色
+  lav: 0xd9cbf3, lav2: 0xb19ce2,                              // お星さまのラベンダー
+  leaf: 0x6f9c84, leaf2: 0x4f8069, leaf3: 0x8db59c,           // 冬の常緑
+  butter: 0xffe6a6, gold: 0xf2d27a, red: 0xd8697e, blue: 0xb7d2ee,
+  ink: 0x5a5578, moss: 0x8fb39c, ghost: 0xffffff, snow: 0xfbfdff, snowShade: 0xe6edf7,
 });
 else Object.assign(C, { ink: 0x6a5a7a, moss: 0x7fc79a, ghost: 0xffffff });
 
@@ -67,6 +78,7 @@ export function rbox(w, h, d, r = .04, seg = 3) {
 export const box = (w, h, d) => cached(`bx${w}|${h}|${d}`, () => new THREE.BoxGeometry(w, h, d));
 export const cyl = (rt, rb, h, seg = 20) => cached(`cy${rt}|${rb}|${h}|${seg}`, () => new THREE.CylinderGeometry(rt, rb, h, seg));
 export const sph = (r, ws = 20, hs = 14) => cached(`sp${r}|${ws}|${hs}`, () => new THREE.SphereGeometry(r, ws, hs));
+export const hemi = (r, ws = 18, hs = 10) => cached(`hm${r}|${ws}|${hs}`, () => new THREE.SphereGeometry(r, ws, hs, 0, Math.PI * 2, 0, Math.PI / 2)); // 上半分の球（雪の帽子など）
 export const cone = (r, h, seg = 20) => cached(`co${r}|${h}|${seg}`, () => new THREE.ConeGeometry(r, h, seg));
 export const tor = (R, r, ts = 8, rs = 24, arc = Math.PI * 2) => cached(`to${R}|${r}|${ts}|${rs}|${arc}`, () => new THREE.TorusGeometry(R, r, ts, rs, arc));
 export const plane = (w, h) => cached(`pl${w}|${h}`, () => new THREE.PlaneGeometry(w, h));
@@ -141,7 +153,7 @@ export function texPlank(base = '#d9a874', rep = [2, 1]) {
   }, rep);
 }
 export function texRoof(_c1, c2 = '#eaa0b4', rep = [6, 3]) { // パステルのうろこ瓦（段ごとに色が変わる）
-  const pal = HALLOWEEN ? ['#f6a04d', '#b99be6', '#ffd27a', '#8d6fc4', '#f28a3a'] : ['#f8c6d3', '#c8ead9', '#dccff6', '#fde3b0', '#bfe0f2'];
+  const pal = HALLOWEEN ? ['#f6a04d', '#b99be6', '#ffd27a', '#8d6fc4', '#f28a3a'] : WINTER ? ['#d9cbf3', '#f3d3df', '#cfe0ef', '#e7dcf7', '#f6e3ea'] : ['#f8c6d3', '#c8ead9', '#dccff6', '#fde3b0', '#bfe0f2'];
   return canvasTex(256, 256, (g, w, h) => {
     g.fillStyle = c2; g.fillRect(0, 0, w, h);
     const n = 8, rh = h / n, cw = w / 4;
@@ -176,6 +188,13 @@ export function texStones(rep = [1, 1]) {
 }
 export function texGrass(rep = [6, 6]) {
   return canvasTex(256, 256, (g, w, h) => {
+    if (WINTER) { // 雪の積もった芝生：白地に青みの陰と、ところどころ顔を出す草
+      g.fillStyle = '#f3f6fb'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(${rnd() > .5 ? '200,212,236' : '255,255,255'},${.25 + rnd() * .4})`; g.beginPath(); g.ellipse(rnd() * w, rnd() * h, 4 + rnd() * 14, 2 + rnd() * 6, rnd() * 3, 0, 7); g.fill(); }
+      for (let i = 0; i < 160; i++) { const l = rnd(); g.strokeStyle = `hsla(${130 + l * 20},${22 + l * 15}%,${58 + l * 14}%,.55)`; g.lineWidth = 1; const x = rnd() * w, y = rnd() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + rnd() * 3 - 1.5, y - 2 - rnd() * 3); g.stroke(); }
+      for (let i = 0; i < 60; i++) { g.fillStyle = 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(rnd() * w, rnd() * h, .8 + rnd() * 1.2, 0, 7); g.fill(); }
+      return;
+    }
     g.fillStyle = HALLOWEEN ? '#cdc27c' : '#a8dba5'; g.fillRect(0, 0, w, h);
     for (let i = 0; i < 1800; i++) { const l = rnd(); g.strokeStyle = HALLOWEEN ? `hsla(${42 + l * 24},${42 + l * 20}%,${55 + l * 20}%,.5)` : `hsla(${110 + l * 30},${45 + l * 20}%,${55 + l * 22}%,.5)`; g.lineWidth = 1; const x = rnd() * w, y = rnd() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + rnd() * 4 - 2, y - 3 - rnd() * 5); g.stroke(); }
     if (HALLOWEEN) { const lc = ['#e8892e', '#c8502a', '#f0c050', '#b8742e']; for (let i = 0; i < 70; i++) { g.save(); g.translate(rnd() * w, rnd() * h); g.rotate(rnd() * 6); g.fillStyle = lc[Math.floor(rnd() * 4)]; g.beginPath(); g.ellipse(0, 0, 3.6, 1.8, 0, 0, 7); g.fill(); g.restore(); } }
@@ -185,7 +204,7 @@ export function texGrass(rep = [6, 6]) {
 export function texSky() {
   return canvasTex(8, 512, (g, w, h) => {
     const gr = g.createLinearGradient(0, 0, 0, h);
-    if (HALLOWEEN) { gr.addColorStop(0, '#c4b2ea'); gr.addColorStop(.5, '#ffd6b2'); gr.addColorStop(1, '#ffeacb'); } else { gr.addColorStop(0, '#bfe3f0'); gr.addColorStop(.55, '#e3f2ee'); gr.addColorStop(1, '#fde9d6'); }
+    if (HALLOWEEN) { gr.addColorStop(0, '#c4b2ea'); gr.addColorStop(.5, '#ffd6b2'); gr.addColorStop(1, '#ffeacb'); } else if (WINTER) { gr.addColorStop(0, '#b9c6ea'); gr.addColorStop(.5, '#dcdcf3'); gr.addColorStop(1, '#f7ecf0'); } else { gr.addColorStop(0, '#bfe3f0'); gr.addColorStop(.55, '#e3f2ee'); gr.addColorStop(1, '#fde9d6'); }
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   });
 }

@@ -2,6 +2,7 @@
 // 保存はこのブラウザの localStorage だけ（サーバーなし・データはごく小さい）。
 import * as THREE from 'three';
 import { COUNTER, CUSHION, ISLAND, surfaceY, blockedAt, inRect } from './play.js';
+import { WINTER } from './kit.js';
 
 const LS = 'mochita-v2-sweets-v1'; // 前の版(mochita-halloween-shop)と同じサイトの中で、保存が混ざらないよう別名
 const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: .65, ...o });
@@ -12,7 +13,7 @@ function muffin() {
   const g = new THREE.Group();
   g.add(mesh(new THREE.CylinderGeometry(.13, .095, .13, 18), M(0xe9c58f), 0, .065, 0));
   g.add(mesh(new THREE.CylinderGeometry(.135, .135, .02, 18), M(0xc48a4a), 0, .135, 0));
-  const top = mesh(new THREE.SphereGeometry(.17, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), M(0xf58a2c), 0, .13, 0); top.scale.set(1, .8, 1); g.add(top);
+  const top = mesh(new THREE.SphereGeometry(.17, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), M(WINTER ? 0xf6c3d2 : 0xf58a2c), 0, .13, 0); top.scale.set(1, .8, 1); g.add(top);
   g.add(mesh(new THREE.CylinderGeometry(.015, .022, .06, 8), M(0x4d8a3a), 0, .285, 0));
   return g;
 }
@@ -46,6 +47,21 @@ function bat() {
   for (const sx of [-1, 1]) { g.add(mesh(new THREE.ConeGeometry(.025, .06, 6), d, sx * .05, .27, 0)); g.add(mesh(new THREE.SphereGeometry(.018, 8, 6), M(0xffd24a, { emissive: 0xffa800, emissiveIntensity: .5 }), sx * .04, .19, .055)); }
   return g;
 }
+function snowMallow() { // 冬：雪だるまマシュマロ
+  const g = new THREE.Group(), w = M(0xfffdf8, { roughness: .9 });
+  g.add(mesh(new THREE.SphereGeometry(.13, 20, 16), w, 0, .12, 0));
+  g.add(mesh(new THREE.SphereGeometry(.095, 20, 16), w, 0, .29, 0));
+  const e = M(0x3a2848); for (const sx of [-.035, .035]) g.add(mesh(new THREE.SphereGeometry(.014, 8, 6), e, sx, .3, .085));
+  const sc = mesh(new THREE.TorusGeometry(.085, .022, 8, 20), M(0xc9b2f0), 0, .215, 0); sc.rotation.x = Math.PI / 2; g.add(sc);
+  return g;
+}
+function starCookie() { // 冬：お星さまクッキー（ラベンダーのアイシング）
+  const g = new THREE.Group(), sh = new THREE.Shape();
+  for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 + Math.PI / 2, r = i % 2 ? .075 : .16; const x = Math.cos(a) * r, y = Math.sin(a) * r; i ? sh.lineTo(x, y) : sh.moveTo(x, y); }
+  const base = mesh(new THREE.ExtrudeGeometry(sh, { depth: .04, bevelEnabled: true, bevelThickness: .015, bevelSize: .015, bevelSegments: 2 }), M(0xe3b77f), 0, .18, 0); g.add(base);
+  const ic = mesh(new THREE.ExtrudeGeometry(sh, { depth: .012, bevelEnabled: false }), M(0xc9b2f0, { roughness: .4 }), 0, .18, .05); ic.scale.setScalar(.82); g.add(ic);
+  return g;
+}
 function pudding() {
   const g = new THREE.Group();
   g.add(mesh(new THREE.CylinderGeometry(.11, .15, .16, 20), M(0xffd466), 0, .08, 0));
@@ -63,18 +79,35 @@ export const SWEETS = [
   { id: 'bat', name: 'コウモリクッキー', build: bat, box: [-3.5, -1.9], icon: '<path d="M24 14c-3 4-5 3-9 0-5 2-9 6-10 12 3-1 6-1 8 2 2-3 5-3 7-1 1 2 3 3 4 3s3-1 4-3c2-2 5-2 7 1 2-3 5-3 8-2-1-6-5-10-10-12-4 3-6 4-9 0z" fill="#8a63b8"/><circle cx="21" cy="22" r="1.6" fill="#ffd24a"/><circle cx="27" cy="22" r="1.6" fill="#ffd24a"/>' },
   { id: 'pudding', name: 'ハロウィンプリン', build: pudding, box: [12.5, 5.2], icon: '<path d="M12 22h24l-3 17H15z" fill="#ffd466"/><path d="M12 22c2-6 22-6 24 0z" fill="#9b5a2c"/><circle cx="24" cy="13" r="3.2" fill="#e0334a"/>' },
 ];
+if (WINTER) { // 冬：名前と形を冬のお菓子に（id は同じなので、集めた記録はそのまま）
+  const W = {
+    muffin: ['いちごマフィン', '<circle cx="24" cy="30" r="10" fill="#f6c3d2"/><path d="M15 30h18l-3 11H18z" fill="#e9c58f"/><path d="M24 20v-5" />'],
+    macaron: ['ほしぞらマカロン'],
+    ghost: ['ゆきだるまマシュマロ', '<circle cx="24" cy="32" r="9" fill="#fffdf6"/><circle cx="24" cy="17" r="7" fill="#fffdf6"/><circle cx="21.5" cy="16.5" r="1.4" fill="#3a2848"/><circle cx="26.5" cy="16.5" r="1.4" fill="#3a2848"/><path d="M17 24h14" stroke="#c9b2f0" stroke-width="3"/>', snowMallow],
+    bat: ['お星さまクッキー', '<path d="M24 7l4.8 10.4 11.2 1.3-8.3 7.6 2.3 11L24 31.6l-10 5.7 2.4-11-8.2-7.7 11.1-1.2z" fill="#c9b2f0"/>', starCookie],
+    pudding: ['クリスマスプリン'],
+  };
+  for (const s of SWEETS) { const w = W[s.id]; if (!w) continue; s.name = w[0]; if (w[1]) s.icon = w[1]; if (w[2]) s.build = w[2]; }
+}
 const sweetIcon = id => `<svg class="ic" viewBox="0 0 48 48" aria-hidden="true"><g class="k">${SWEETS.find(s => s.id === id).icon}</g></svg>`;
 
 // ---- プレゼントボックス ----
 function boxTex() {
   const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+  if (WINTER) { // 冬：ラベンダーの地に白い雪の結晶と星
+    g.fillStyle = '#c9b2f0'; g.fillRect(0, 0, 128, 128);
+    g.strokeStyle = '#ffffff'; g.lineWidth = 2.4; g.lineCap = 'round';
+    for (const [x, y] of [[24, 24], [88, 24], [56, 64], [24, 104], [88, 104], [120, 64], [-8, 64]]) for (let i = 0; i < 3; i++) { const a = i * Math.PI / 3; g.beginPath(); g.moveTo(x - Math.cos(a) * 9, y - Math.sin(a) * 9); g.lineTo(x + Math.cos(a) * 9, y + Math.sin(a) * 9); g.stroke(); }
+    g.fillStyle = '#fff4c8'; for (const [x, y] of [[56, 20], [8, 64], [56, 108], [104, 64]]) { g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 3.5 : 8, a = i / 10 * Math.PI * 2 - Math.PI / 2; g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } g.fill(); }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  }
   g.fillStyle = '#f4963a'; g.fillRect(0, 0, 128, 128);
   g.fillStyle = '#6b3f8f'; for (const [x, y] of [[24, 24], [88, 24], [56, 64], [24, 104], [88, 104], [120, 64], [-8, 64]]) { g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); }
   g.fillStyle = '#ffd978'; for (const [x, y] of [[56, 20], [8, 64], [56, 108], [104, 64]]) { g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 3.5 : 8, a = i / 10 * Math.PI * 2 - Math.PI / 2; g.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } g.fill(); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
 function giftBox(tex) {
-  const g = new THREE.Group(), body = M(0xffffff, { map: tex }), rb = M(0xffd24a, { roughness: .5 }), lidM = M(0x7a4aa0, { transparent: true });
+  const g = new THREE.Group(), body = M(0xffffff, { map: tex }), rb = M(WINTER ? 0xfffaf6 : 0xffd24a, { roughness: .5 }), lidM = M(WINTER ? 0x9a84d6 : 0x7a4aa0, { transparent: true });
   g.add(mesh(new THREE.BoxGeometry(.5, .36, .5), body, 0, .18, 0));
   g.add(mesh(new THREE.BoxGeometry(.08, .361, .502), rb, 0, .18, 0)); g.add(mesh(new THREE.BoxGeometry(.502, .361, .08), rb, 0, .18, 0));
   const lid = new THREE.Group(); lid.position.y = .36; g.add(lid);
