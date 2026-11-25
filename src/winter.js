@@ -169,7 +169,7 @@ export function winterInterior(world, cp, front, props) {
   P.giftBox(cp, -2.1, 0, .1, .26, .2, .24, C.lav, C.milk, .3); P.giftBox(cp, -2.4, 0, -.1, .2, .16, .2, C.pink, C.lav2, -.2);
   // 棚の上の飾り（中央の細い棚）
   const ledge = grp(props, 0, 0, -2.78);
-  xmasTree(ledge, -.95, 2.75, 0, .22, { star: true });
+  xmasTree(ledge, -.95, 2.75, 0, .22, { star: false });
   snowman(ledge, 0.1, 2.75, 0, .4); star(ledge, .95, 2.95, 0, .7, { em: .45 });
   // 背面の壁：ガーランドと吊るしのお星さま・雪の結晶
   garland(props, [-3.9, 3.85, -2.85], [-1.4, 3.85, -2.85], 16, .3);
@@ -178,7 +178,8 @@ export function winterInterior(world, cp, front, props) {
   [[-2.3, 3.0, -2.93, 1], [2.1, 3.05, -2.93, .9], [-3.3, 2.7, -2.93, .8], [3.4, 2.6, -2.93, .85]].forEach(([x, y, z, s]) => snowflake(props, x, y, z, s));
   // 床：店の右奥に大きなツリー、まわりにプレゼント
   const fl = grp(world, 0, .1, 0);
-  xmasTree(fl, 3.2, 0, -1.5, .95);
+  xmasTree(fl, 3.2, 0, -1.5, .95, { star: false }); // てっぺんは点灯の回まで空けておく（動画の流れに合わせる）
+  star(fl, 2.55, 1.55, -1.25, 1.0, { bob: .06 }); // お星さまはツリーのそばに浮かぶ
   P.giftBox(fl, 2.75, 0, -1.0, .34, .26, .3, C.lav, C.milk, .4); P.giftBox(fl, 3.7, 0, -.85, .28, .22, .28, C.pink, C.lav2, -.3); P.giftBox(fl, 3.15, 0, -.75, .22, .18, .22, C.mint2, C.pink, .9);
   pottedRose(fl, -3.3, 0, 1.0, 1.1, 0); pottedRose(fl, -3.0, 0, 1.4, .9, 2);
   snowman(fl, -3.3, 0, -1.3, .75, .5, { scarf: C.pink, hat: C.lav2 }); // ぬいぐるみの雪だるま
@@ -186,7 +187,7 @@ export function winterInterior(world, cp, front, props) {
   P.giftBox(fl, 2.9, 0, 2.75, .3, .22, .26, C.lav, C.pink, -.4);
   // 窓辺
   const sill = grp(world, -3.85, 1.18, 0);
-  xmasTree(sill, .03, 0, -.55, .16);
+  xmasTree(sill, .03, 0, -.55, .16, { star: false });
   star(sill, .05, .12, -.8, .5, { em: .5 });
 }
 
@@ -197,7 +198,7 @@ export function winterGarden(gd, front) {
   snowman(gd, 2.7, 0, 4.3, .85, -.4, { scarf: C.pink, hat: C.lav });
   wreath(gd, -2.98, 1.15, 7.1 + .06, 1.0); wreath(gd, 3.5, 1.15, 7.1 + .06, 1.0);
   // 外の大きなツリー（電球つき）
-  xmasTree(gd, 12.3, 0, 1.6, 1.55, { snow: true });
+  xmasTree(gd, 12.3, 0, 1.6, 1.55, { snow: true, star: false });
   // そり
   const sl = grp(gd, 10.9, 0, -3.4, .6);
   add(sl, rbox(.5, .05, 1.0, .02), M(C.woodL), 0, .22, 0);
