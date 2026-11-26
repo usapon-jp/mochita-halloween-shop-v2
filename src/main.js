@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from '../vendor/loaders/GLTFLoader.js';
 import { mergeGeometries } from '../vendor/utils/BufferGeometryUtils.js';
-import { texSky, texCloud, texBlob, HALLOWEEN } from './kit.js';
+import { texSky, texCloud, texBlob, HALLOWEEN, WINTER, THEME } from './kit.js';
 import { buildShop, SLOT } from './shop.js';
 import { anim } from './props.js';
 import { SHOTS, CameraRig } from './cameras.js';
@@ -15,7 +15,12 @@ const q0 = new URLSearchParams(location.search);
 const MOCHITA_LOOK = { roughness: 0.8, tint: 1.0 }; // plain用: 光沢を抑え、白飛びしにくくする
 
 const canvas = document.getElementById('c');
-document.body.dataset.theme = HALLOWEEN ? 'halloween' : 'pastel'; // UIの色（style.css）
+document.body.dataset.theme = THEME; // UIの色（style.css）
+if (WINTER) { // かぼちゃのアイコンを冬用に（タグ＝雪の結晶、お庭＝お星さま）
+  document.querySelector('#area use')?.setAttribute('href', '#ic-snow');
+  document.querySelector('[data-warp=garden] use')?.setAttribute('href', '#ic-star');
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', '#c9b2f0');
+}
 let renderer;
 try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: new URLSearchParams(location.search).has('capture') });
@@ -32,8 +37,8 @@ const scene = new THREE.Scene();
 scene.background = texSky();
 
 // ---- 光: 柔らかい昼の自然光（白い体が飛ばないよう控えめ） ----
-scene.add(new THREE.HemisphereLight(HALLOWEEN ? 0xffe8d0 : 0xfff4e8, HALLOWEEN ? 0xd9a88a : 0xf0c9bb, 1.25));
-const sun = new THREE.DirectionalLight(HALLOWEEN ? 0xffe0b8 : 0xfff0dc, 2.2);
+scene.add(new THREE.HemisphereLight(HALLOWEEN ? 0xffe8d0 : WINTER ? 0xf3f0ff : 0xfff4e8, HALLOWEEN ? 0xd9a88a : WINTER ? 0xd6cfe6 : 0xf0c9bb, 1.25));
+const sun = new THREE.DirectionalLight(HALLOWEEN ? 0xffe0b8 : WINTER ? 0xfff2e6 : 0xfff0dc, WINTER ? 1.9 : 2.2);
 sun.position.set(5, 11, 9); sun.target.position.set(1.5, 0, -.5);
 sun.castShadow = true; sun.shadow.mapSize.set(isSmall ? 1024 : 2048, isSmall ? 1024 : 2048);
 const sc = sun.shadow.camera; sc.left = -12; sc.right = 14; sc.top = 10; sc.bottom = -10; sc.near = 2; sc.far = 40;
@@ -50,7 +55,7 @@ const shop = buildShop(scene);
 const cloudTex = texCloud();
 const clouds = [];
 [[-14, 9, -22, 9], [10, 11, -26, 12], [-2, 7, -30, 10], [22, 8, -12, 8], [-24, 6, -4, 9], [14, 5, -20, 7]].forEach(([x, y, z, s]) => {
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, opacity: .85, depthWrite: false, fog: false, color: HALLOWEEN ? 0xffe0cc : 0xffffff }));
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, opacity: .85, depthWrite: false, fog: false, color: HALLOWEEN ? 0xffe0cc : WINTER ? 0xf4f0ff : 0xffffff }));
   sp.position.set(x, y, z); sp.scale.set(s, s / 2, 1); sp.userData.base = x; sp.userData.spd = .05 + Math.random() * .05; scene.add(sp); clouds.push(sp);
 });
 
@@ -452,7 +457,7 @@ function tick() {
     if (f) { const a = T * f.spd + f.ph; g.position.set(f.cx + Math.cos(a) * f.r, f.cy + Math.sin(a * 2.1) * .35, f.cz + Math.sin(a) * f.r * .75); g.rotation.y = -a + (f.spd > 0 ? 0 : Math.PI); g.rotation.z = Math.sin(a * 2.1) * .12; }
     const fl = f ? 14 : 3, am = f ? .75 : .18, k = Math.sin(T * fl + g.id) * am; w[0].rotation.z = k; w[1].rotation.z = -k;
   }
-  for (const m of anim.leaves) { const l = m.userData.leaf; l.y -= l.sp * dt; l.x += Math.sin(T * .6 + l.ph) * .25 * dt; l.z += Math.cos(T * .5 + l.ph) * .15 * dt; if (l.y < .05) { l.y = l.h; l.x = l.bx.x[0] + Math.random() * (l.bx.x[1] - l.bx.x[0]); l.z = l.bx.z[0] + Math.random() * (l.bx.z[1] - l.bx.z[0]); } m.position.set(l.x, l.y, l.z); m.rotation.set(T * l.rs + l.ph, T * l.rs * .7, l.ph); }
+  for (const m of anim.leaves) { const l = m.userData.leaf; l.y -= l.sp * dt; l.x += Math.sin(T * .6 + l.ph) * .25 * dt; l.z += Math.cos(T * .5 + l.ph) * .15 * dt; if (l.y < .05) { l.y = l.h; do { l.x = l.bx.x[0] + Math.random() * (l.bx.x[1] - l.bx.x[0]); l.z = l.bx.z[0] + Math.random() * (l.bx.z[1] - l.bx.z[0]); } while (l.bx.skip?.(l.x, l.z)); } m.position.set(l.x, l.y, l.z); m.rotation.set(T * l.rs + l.ph, T * l.rs * .7, l.ph); }
   for (const c of clouds) { c.position.x = c.userData.base + Math.sin(T * c.userData.spd) * 3; }
   if (mochitaMixer) mochitaMixer.update(dt);
   if (walker) walker.update(dt, T);

@@ -1,6 +1,6 @@
 // 立体小物ライブラリ。すべて原点=接地面中心。動くもの(葉・湯気)は anim に登録する。
 import * as THREE from 'three';
-import { C, HALLOWEEN, M, rbox, box, cyl, sph, cone, tor, plane, lathe, pill, add, mesh, grp,
+import { C, HALLOWEEN, WINTER, M, rbox, box, cyl, sph, hemi, cone, tor, plane, lathe, pill, add, mesh, grp,
   texStripe, texGingham, texLabel, texSpine, texBlob } from './kit.js';
 
 export const anim = { sway: [], steam: [], bob: [], twinkle: [] };
@@ -200,15 +200,18 @@ export function tree(p, x, y, z, s = 1, color = C.leaf2, pink = false) {
   }
   add(g, cyl(.12 * s, .17 * s, 1.3 * s, 10), M(C.woodD), 0, .65 * s, 0);
   const top = grp(g, 0, 1.2 * s, 0); top.userData.sway = { amp: .012, spd: .45, ph: x }; anim.sway.push(top);
-  [[0, .5, 0, .85], [.55, .2, .2, .6], [-.55, .25, -.1, .62], [.1, .25, -.55, .55], [-.1, .95, .15, .55], [.15, .15, .55, .5]].forEach(([a, b, c, r], i) =>
-    add(top, sph(r * s, 18, 12), M(pink && i % 2 ? C.pink : [color, C.leaf, C.leaf3][i % 3], { r: .8 }), a * s, b * s, c * s));
+  [[0, .5, 0, .85], [.55, .2, .2, .6], [-.55, .25, -.1, .62], [.1, .25, -.55, .55], [-.1, .95, .15, .55], [.15, .15, .55, .5]].forEach(([a, b, c, r], i) => {
+    add(top, sph(r * s, 18, 12), M(WINTER ? [color, C.leaf, C.leaf3][i % 3] : pink && i % 2 ? C.pink : [color, C.leaf, C.leaf3][i % 3], { r: .8 }), a * s, b * s, c * s);
+    if (WINTER) add(top, hemi(r * s * 1.02, 18, 10), M(C.snow, { r: .95 }), a * s, b * s + r * s * .28, c * s).scale.set(1, .78, 1); // 雪の帽子
+  });
   blob(p, x, y, z, 1.3 * s, .22);
   return g;
 }
 export function bush(p, x, y, z, s = 1, color = C.leaf2, flower = true) {
   const g = grp(p, x, y, z);
   [[0, .22, 0, .3], [.28, .16, .1, .22], [-.26, .17, 0, .24], [.05, .14, .26, .2]].forEach(([a, b, c, r], i) => add(g, sph(r * s, 14, 10), M([color, C.leaf, C.leaf3, color][i], { r: .8 }), a * s, b * s, c * s));
-  if (flower) for (let i = 0; i < 6; i++) add(g, sph(.045 * s, 8, 6), M([C.pink, C.butter, C.white, C.lav][i % 4]), Math.cos(i * 1.2) * .3 * s, (.25 + (i % 3) * .06) * s, Math.sin(i * 1.2) * .3 * s + .06);
+  if (WINTER) [[0, .22, 0, .3], [.28, .16, .1, .22], [-.26, .17, 0, .24]].forEach(([a, b, c, r]) => add(g, hemi(r * s * 1.02, 14, 8), M(C.snow, { r: .95 }), a * s, b * s + r * s * .28, c * s).scale.set(1, .78, 1));
+  else if (flower) for (let i = 0; i < 6; i++) add(g, sph(.045 * s, 8, 6), M([C.pink, C.butter, C.white, C.lav][i % 4]), Math.cos(i * 1.2) * .3 * s, (.25 + (i % 3) * .06) * s, Math.sin(i * 1.2) * .3 * s + .06);
   blob(p, x, y, z, .55 * s, .2);
   return g;
 }

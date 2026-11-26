@@ -1,6 +1,8 @@
 /* UI: やわらかい半透明のガラス調（ぽこあポケモン・ちいかわ・原神のスマホUIを参考）。
-   太い黒縁をやめ、丸い角・細く明るい縁・淡いパステルの塗り。色は変数（ハロウィン既定／?theme=pastel で春色）。アイコンは index.html の自作SVG。 */
+   太い黒縁をやめ、丸い角・細く明るい縁・淡いパステルの塗り。色は変数（冬が既定／?theme=halloween でハロウィン／?theme=pastel で春色）。アイコンは index.html の自作SVG。 */
 :root{--ink:#5b4258;--line:#8f6e86;--solid:#fffaf0;--glass:rgba(255,251,243,.82);--accent:#f8b26a;--accent-hi:#ffd9ad;--accent2:#d8c6f5;--accent2-hi:#ebe0fb;--shadow:0 4px 16px rgba(70,45,80,.18);--hair:rgba(91,66,88,.16)}
+body[data-theme=winter]{--ink:#55507a;--line:#8a83ad;--solid:#fdfcff;--glass:rgba(250,249,255,.84);--accent:#c9b2f0;--accent-hi:#e9defc;--accent2:#cfe0f2;--accent2-hi:#e8f1fa;--shadow:0 4px 16px rgba(60,55,100,.18);--hair:rgba(85,80,122,.16)}
+body[data-theme=winter]{background:#e9ecf7}
 body[data-theme=pastel]{--ink:#7a4a62;--line:#a77b93;--accent:#f4b6c6;--accent-hi:#fde0e8;--accent2:#c3e8d6;--accent2-hi:#e3f5ec}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;overflow:hidden;background:#e8f3ef;font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;color:var(--ink);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}

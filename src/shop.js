@@ -1,11 +1,12 @@
 // お店の建物・棚・カウンター・庭の配置。座標は m、+z が手前(カメラ側)、y が上。
 // 店内: x∈[-4,4], z∈[-3,3]。カウンター上面 y=1.0。 もちた置き場は slot (0,1.0,-0.45)。
 import * as THREE from 'three';
-import { C, H, HALLOWEEN, M, rbox, box, cyl, sph, cone, tor, plane, lathe, pill, add, mesh, grp,
+import { C, H, HALLOWEEN, WINTER, M, rbox, box, cyl, sph, cone, tor, plane, lathe, pill, add, mesh, grp,
   texWoodFloor, texPlaster, texPlank, texRoof, texStripe, texGingham, texStones, texGrass, texLabel, texBlob } from './kit.js';
 import * as P from './props.js';
 import * as Q from './props2.js';
 import { halloweenInterior, halloweenGarden } from './halloween.js';
+import { winterInterior, winterGarden, christmasRose } from './winter.js';
 import { blob, anim } from './props.js';
 
 export const SLOT = new THREE.Vector3(0, 1.0, -0.45);
@@ -140,9 +141,9 @@ export function buildShop(scene) {
   const brk = grp(arch, 4.1, 3.1, .35);
   add(brk, box(.9, .05, .05), M(C.woodD), .45, 0, 0);
   add(brk, cyl(.004, .004, .4, 4), M(C.woodD), .2, -.2, 0); add(brk, cyl(.004, .004, .4, 4), M(C.woodD), .7, -.2, 0);
-  const sb = P.signBoard(brk, .45, -.5, 0, .85, .5, 'おやつ', 'もちた', 0, '#fff6ea', HALLOWEEN ? '#d0641c' : '#d86f8c'); sb.userData.sway = { amp: .05, spd: .8, ph: 2 }; anim.sway.push(sb);
+  const sb = P.signBoard(brk, .45, -.5, 0, .85, .5, 'おやつ', 'もちた', 0, '#fff6ea', HALLOWEEN ? '#d0641c' : WINTER ? '#8a6fc4' : '#d86f8c'); sb.userData.sway = { amp: .05, spd: .8, ph: 2 }; anim.sway.push(sb);
   // 背面壁の大看板（もちたの頭より上）
-  P.signBoard(props, 0, 3.4, -2.9, 2.6, .8, 'もちたの小さなお店', HALLOWEEN ? 'Happy Halloween' : '雑貨とおやつ', 0, '#fff4e4', HALLOWEEN ? '#a85a1c' : '#b04a6a');
+  P.signBoard(props, 0, 3.4, -2.9, 2.6, .8, 'もちたの小さなお店', HALLOWEEN ? 'Happy Halloween' : WINTER ? 'Merry Christmas' : '雑貨とおやつ', 0, '#fff4e4', HALLOWEEN ? '#a85a1c' : WINTER ? '#6f58a8' : '#b04a6a');
   P.ribbonBow(props, -1.5, 3.65, -2.84, C.pink, 1.1); P.ribbonBow(props, 1.5, 3.65, -2.84, C.mint2, 1.1);
 
   // ===== カウンター =====
@@ -249,7 +250,7 @@ export function buildShop(scene) {
   const ab = grp(fl, -3.5, .07, 0.8, .5);
   add(ab, box(.04, .8, .04), M(C.woodD), -.25, .4, -.14).rotation.z = 0; add(ab, box(.04, .8, .04), M(C.woodD), .25, .4, -.14);
   add(ab, rbox(.7, .8, .06, .03), M(C.woodD), 0, .45, .06, { rx: -.15 });
-  add(ab, plane(.6, .68), M(0xffffff, { r: .9, map: texLabel(HALLOWEEN ? 'お菓子' : 'おやつ', '#fff2e4', HALLOWEEN ? '#c8641c' : '#cc6682', 256, 300, HALLOWEEN ? 'Trick or Treat' : '焼きたて') }), 0, .45, .095, { rx: -.15, cast: false });
+  add(ab, plane(.6, .68), M(0xffffff, { r: .9, map: texLabel(HALLOWEEN ? 'お菓子' : WINTER ? 'ケーキ' : 'おやつ', '#fff2e4', HALLOWEEN ? '#c8641c' : WINTER ? '#8a6fc4' : '#cc6682', 256, 300, HALLOWEEN ? 'Trick or Treat' : WINTER ? 'クリスマス' : '焼きたて') }), 0, .45, .095, { rx: -.15, cast: false });
   P.blob(fl, -3.5, .07, .85, .5, .22);
   P.leafPlant(fl, -3.6, .07, 2.7, 1.5, C.lav, 10); P.bushy(fl, 3.6, .07, 1.0, 1.3, C.pink);
   P.bookStack(fl, 1.2, .07, 2.8, 4, .5, 1.2); P.giftBox(fl, 0.4, .07, 2.7, .4, .3, .35, C.lav, C.pink, -.3);
@@ -274,6 +275,7 @@ export function buildShop(scene) {
   buildGarden(world, R, front);
 
   if (HALLOWEEN) halloweenInterior(world, cp, front, props);
+  if (WINTER) winterInterior(world, cp, front, props);
   // 窓の光の筋
   lightShafts(world);
 
@@ -363,7 +365,7 @@ function buildGarden(world, R, front) {
   // ===== 広いお庭（右側） =====
   const pn = grp(gd, 9.2, 0, 4.2);
   add(pn, pill(1.9, .08, .03, 40), M(C.milk, { r: .9 }), 0, .04, 0).scale.set(1, 1, .72);
-  add(pn, pill(1.76, .02, .01, 40), M(HALLOWEEN ? 0x9fc8d8 : 0xa8dce0, { r: .12 }), 0, .09, 0, { cast: false }).scale.set(1, 1, .72);
+  add(pn, pill(1.76, .02, .01, 40), M(HALLOWEEN ? 0x9fc8d8 : WINTER ? 0xdbe8f4 : 0xa8dce0, { r: .12 }), 0, .09, 0, { cast: false }).scale.set(1, 1, .72);
   [[-.6, .1], [.4, -.3], [.8, .3], [-.1, .45]].forEach(([x, z], i) => { add(pn, cyl(.2, .2, .01, 14), M(C.leaf, { r: .6 }), x, .105, z, { cast: false }); add(pn, sph(.05, 8, 6), M(i % 2 ? C.pink : C.white), x + .03, .13, z).scale.set(1, .6, 1); });
   [[-1.9, .3], [-1.5, -.9], [1.8, .6], [1.4, -.9], [0, 1.3]].forEach(([x, z], i) => add(pn, sph(.2 + (i % 2) * .08, 10, 8), M(0xe9ddc9, { r: .95 }), x, .12, z).scale.set(1, .6, 1));
   // 右庭の曲がる小道
@@ -373,6 +375,7 @@ function buildGarden(world, R, front) {
     add(gd, rbox(1.2, .16, 3.2, .07), M(C.woodL, { r: .8 }), x, .08, z, { ry: -.05 });
     add(gd, box(1.0, .02, 3.0), M(0x7c5738, { r: 1 }), x, .17, z, { ry: -.05 });
     if (HALLOWEEN) { for (let i = 0; i < 5; i++) Q.pumpkin(gd, x + (i % 2 - .5) * .3, .17, z - 1.2 + i * .6, .75 + (i % 3) * .12, { vine: true, face: (i + k) % 4 === 0, color: [C.orange, C.rose, 0xf7b560, 0xfff1dc][(i + k) % 4] }); }
+    else if (WINTER) { for (let i = 0; i < 4; i++) christmasRose(gd, x + (i % 2 - .5) * .28, .18, z - 1.05 + i * .7, .85, k + i); } // 花壇はクリスマスローズ（動画 第2話）
     else for (let i = 0; i < 9; i++) P.bush(gd, x + (i % 2 - .5) * .34, .17, z - 1.3 + i * .32, .2 + (i % 3) * .035, [C.leaf, C.leaf2, C.leaf3][(i + k) % 3], true);
   });
   // 大きな木・低木・ガーデンテーブル
@@ -389,8 +392,8 @@ function buildGarden(world, R, front) {
   for (let i = 0; i < 18; i++) P.bush(gd, 5.0 + (i % 9) * 1.0 + (i % 2) * .3, 0, 8.0 - Math.floor(i / 9) * .5, .55 + (i % 3) * .1, [C.leaf, C.leaf2, C.leaf3][i % 3], true);
   P.bookStack(gd, 6.9, 0, 4.1, 3, .4, 1.0);
   // 芝生に散らす小花・石・きのこ
-  const rr = rng(77), fc = [C.pink, C.butter, C.white, C.lav, C.peach, C.rose], bed = (x, z) => (x > 5.4 && x < 11.2 && z > -2.4 && z < 2.6) || (x > 3.6 && x < 7.2 && z > 4.6 && z < 6.2) || (x > -7.2 && x < -3.2 && z > 4.6 && z < 6.2);
-  for (let i = 0; i < 360; i++) {
+  const rr = rng(77), fc = WINTER ? [C.snow, C.snowShade, C.snow, C.lav, C.snow, C.pink] : [C.pink, C.butter, C.white, C.lav, C.peach, C.rose], bed = (x, z) => (x > 5.4 && x < 11.2 && z > -2.4 && z < 2.6) || (x > 3.6 && x < 7.2 && z > 4.6 && z < 6.2) || (x > -7.2 && x < -3.2 && z > 4.6 && z < 6.2);
+  for (let i = 0; i < (WINTER ? 90 : 360); i++) {
     const x = -7.6 + rr() * 21, z = -6 + rr() * 14.2;
     if ((Math.abs(x) < 4.7 && z > -3.6 && z < 3.7) || bed(x, z) || (x > 6.6 && x < 11.8 && z > 2.4 && z < 6)) continue;
     const c = fc[Math.floor(rr() * 6)], s = .7 + rr() * .6;
@@ -409,6 +412,7 @@ function buildGarden(world, R, front) {
   P.flowers(gd, -5.4, 0, 3.6, 2.2, [C.lav, C.pink, C.white], 8); P.basket(gd, -5.6, 0, 4.3, .26, .22, 'flower');
   P.bush(gd, -4.7, 0, 4.0, 1.2, C.leaf, true); P.bush(gd, -5.0, 0, -1.8, 1.0, C.leaf3, true);
   if (HALLOWEEN) halloweenGarden(gd, front);
+  if (WINTER) winterGarden(gd, front);
   // 雲（島の外の空に）
   // 電飾（柱→街灯→柱）
   fairy(front, [[-4.1, 3.7, 3.0], [-3.0, 2.9, 5.0], [-1.9, 2.4, 6.6]], 14);
@@ -427,7 +431,7 @@ function buildGarden(world, R, front) {
 function fairy(parent, pts, n) {
   const curve = new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p)));
   add(parent, new THREE.TubeGeometry(curve, 24, .008, 5), M(C.woodD, { r: 1 }), 0, 0, 0, { cast: false });
-  const cols = HALLOWEEN ? [0xffb04a, 0xc59bff, 0xffe08a, 0xff8a3c] : [0xffe6a8, 0xfbc4d4, 0xc4ecd6, 0xe0d4fa];
+  const cols = HALLOWEEN ? [0xffb04a, 0xc59bff, 0xffe08a, 0xff8a3c] : WINTER ? [0xfff1c4, 0xe7dbff, 0xffe0ea, 0xd7ecff] : [0xffe6a8, 0xfbc4d4, 0xc4ecd6, 0xe0d4fa];
   for (let i = 1; i < n; i++) {
     const pt = curve.getPoint(i / n);
     add(parent, sph(.035, 8, 6), M(cols[i % 4], { r: .4, em: .9 }), pt.x, pt.y - .04, pt.z, { cast: false });
